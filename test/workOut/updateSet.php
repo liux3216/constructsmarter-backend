@@ -1,0 +1,19 @@
+<?php
+//load dependencies:
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+//-------------------------------------------------------
+$id = $_POST["id"];
+$repetition = $_POST["repetition"];
+$weight = $_POST["weight"];
+$duration = $_POST["duration"];
+$calories = array_key_exists("calories", $_POST)?$_POST["calories"]:null;
+$db->exec(
+    "UPDATE `workOutSets` SET 
+    `repetition` = ?, 
+    `weight` = ?, 
+    `duration` = ?, 
+    `calories` = ?
+    WHERE `id` = ? AND `userId` = \"$userId\";", 
+    [$repetition, $weight, $duration, $calories, $id], __FILE__, __LINE__
+);
+exit();

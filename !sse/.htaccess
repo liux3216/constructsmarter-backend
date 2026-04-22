@@ -1,0 +1,17 @@
+
+
+# 🚫 Disable all output buffering + gzip
+SetEnv no-gzip 1
+SetEnv dont-vary 1
+
+# 🚫 Ensure mod_deflate does NOT compress SSE responses
+<IfModule mod_deflate.c>
+    SetEnvIfNoCase Request_URI "^/sse" no-gzip
+</IfModule>
+
+# 🚫 Disable caching
+Header set Cache-Control "no-cache"
+
+# 🚫 Apache should flush immediately
+EnableSendfile Off
+EnableMMAP Off

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Purchase Order Form</title>
+        <link rel = "stylesheet" href = "./style.css">
+    </head>
+    <body>
+        <img class = "logo" src = "./logo.png" alt = "logo image"/>
+        <div class = "text0">PURCHASE ORDER FORM</div>
+        <hr/>
+        <div class = "text1 text-gray">
+            <div>2463 Tripadi Way</div>
+            <div>Hayward, CA 94545</div>
+            <div>Phone: (408) 988-0101</div>
+            <div>Fax: (510) 634-7075</div>
+        </div>
+        <div class = "text-right">
+            <span class = "text1">P.O. NO.:</span>
+            <span class = "text2">{{poNumber}}</span>
+        </div>
+        <table class = "mt32px">
+            <tbody>
+                <tr>
+                    <td>
+                        <div class = "text1">Date</div>
+                        <div class = "text2 text-right">{{date}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">P.O. Category</div>
+                        <div class = "text2 text-right">{{poCategory}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Requestor</div>
+                        <div class = "text2 text-right">{{requestor}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Project Name</div>
+                        <div class = "text2 text-right">{{projectName}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Assigned to Departments</div>
+                        <div class = "text2 text-right">{{department}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Truck Number</div>
+                        <div class = "text2 text-right">{{truckNumber}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Payment Method</div>
+                        <div class = "text2 text-right">{{paymentMethod}}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class = "text1">Billable to Clients</div>
+                        <div class = "text2 text-right">{{billable}}</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class = "mt32px text-center">
+            <tbody>
+                <tr class = "text1 bg1">
+                    <td>Vendor Name</td>
+                    <td>Description</td>
+                    <td>Quantity</td>
+                    <td>Unit Price</td>
+                    <td>Line Total</td>
+                </tr>
+                <tr class = "text2">
+                    <td>{{vendorName}}</td>
+                    <td>{{description}}</td>
+                    <td>{{qty}}</td>
+                    <td>{{unitPrice}}</td>
+                    <td>{{lineTotal}}</td>
+                </tr>
+                <tr>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "text1">Subtotal</td>
+                    <td class = "text2">{{subtotal}}</td>
+                </tr>
+                <tr>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "text1">Sales Tax</td>
+                    <td class = "text2">{{tax}}</td>
+                </tr>
+                <tr>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "noborder"></td>
+                    <td class = "text1">Discount</td>
+                    <td class = "text2">{{discount}}</td>
+                </tr>
+                <tr>
+                    <td class = "noborder text1">Comments: </td>
+                    <td class = "noborder text2" colspan = "2">{{comments}}</td>
+                    <td class = "text1">Total</td>
+                    <td class = "text2">{{total}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <table class = "mt32px noborder">
+            <tbody>
+                <tr>
+                    <td class = "width-50 noborder"></td>
+                    <td class = "width-20 noborder text2"><!-- approver --></td>
+                    <td class = "width-30 noborder text2"><!-- approverDate --></td>
+                </tr>
+                <tr>
+                    <td class = "width-50 noborder"></td>
+                    <td class = "width-20 noborder border-top-1 text1">Authorized by</td>
+                    <td class = "width-30 noborder border-top-1 text1">Date</td>
+                </tr>
+            </tbody>
+        </table>
+        <table id = "decisionStampTable" class = "noborder mt32px" style = "display: none;">
+            <tbody>
+                <tr>
+                    <td class = "width-70 noborder"></td>
+                    <td class = "width-30 noborder">
+                        <img src = "{{decisionStamp}}" alt = "decision stamp image"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

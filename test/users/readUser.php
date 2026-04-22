@@ -1,0 +1,65 @@
+<?php
+//load dependencies:
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+//-------------------------------------------------
+$curUserId = $_POST["curUserId"];
+$user = $db->one(
+    "SELECT 
+    CONCAT_WS(\" \", `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `userName`, 
+    `u`.`id`, 
+    `allOffice`, 
+    `background`, 
+    `birthDay`, 
+    `invoiceNumber`, 
+    `calendar`, 
+    `u`.`creatorId`, 
+    `u`.`createdAt`, 
+    `u`.`updatedAt`, 
+    `timeOffs`, 
+    `department`, 
+    `dispatch`, 
+    `driverLicense`, 
+    `email`, 
+    `extension`, 
+    `firstName`, 
+    `fleets`, 
+    `forms`, 
+    `hireDate`, 
+    `lanId`, 
+    `lastName`, 
+    `middleName`, 
+    `newspaper`, 
+    `office`, 
+    `outside`, 
+    `outsideStatus`, 
+    `perDiem`, 
+    `personel`, 
+    `phaseLevel`, 
+    `phoneNumber`,
+    `workPhone`,  
+    `projects`, 
+    `purchases`, 
+    `quitDate`, 
+    `region`, 
+    `reports`, 
+    `residence`, 
+    `role`, 
+    `ssn`, 
+    `profileId`, 
+    IF(`profileId` IS NOT NULL, CONCAT(\"https:\/\/$publicBucket.s3.us-west-1.amazonaws.com\/\", `profileId`), \"\") AS `profileUrl`,
+    `unionName`, 
+    `u`.`updaterId`, 
+    `workLogs`, 
+    `workPhone`,
+    `version`,
+    `address`,
+    `verificationCode`, 
+    `void`, 
+    `voidReason`,
+    `validateReason`,
+    CASE WHEN `mvrId` <> \"\" THEN \"yes\" ELSE \"\" END AS `hasMVR`,
+    `f`.`name` AS `profileFileName`
+    FROM `users` `u` LEFT JOIN `fileInfo` `f` ON `u`.`profileId` = `f`.`id` WHERE `u`.`id` = ?;", [$curUserId], __FILE__, __LINE__
+);
+if(!$user) exit("");
+exit(json_encode($user));

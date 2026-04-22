@@ -1,0 +1,13 @@
+{
+    "require": {
+        "tecnickcom/tcpdf": "^6.10",
+        "phpoffice/phpspreadsheet": "^5.4",
+        "phpoffice/phpword": "^1.4",
+        "dompdf/dompdf": "^3.1",
+        "phpmailer/phpmailer": "^7.0",
+        "firebase/php-jwt": "^7.0",
+        "aws/aws-sdk-php": "^3.369",
+        "ezyang/htmlpurifier": "^4.19",
+        "endroid/qr-code": "^5.0"
+    }
+}

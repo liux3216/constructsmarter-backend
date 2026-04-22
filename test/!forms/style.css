@@ -1,0 +1,68 @@
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+    border-spacing: 0px;
+    width : 100%;
+    table-layout: fixed;
+}
+td {
+    word-wrap: break-word;
+    border: 1px solid black;
+    padding: 12px;
+}
+.logo {
+    width: 169px;
+    height: 59px;
+}
+.text0 {
+    font-weight: bold;
+    font-size: 32px;
+    color: red;
+    text-align: right;
+}
+.text1 {
+    font-family: Verdana, Trebuchet MS;
+    font-size: 18px;
+    font-weight: bold;
+}
+.text2 {
+    font-family: Arial;
+    font-size: 14px;
+}
+.border-top-1 {
+    border-top: 1px solid black!important;
+}
+.text-gray {
+    color: gray;
+}
+.bg1 {
+    background-color: #0ABAB5;
+}
+.text-right {
+    text-align: right;
+}
+.text-center {
+    text-align: center;
+}
+.noborder {
+    border: 0;
+}
+.mt32px{
+    margin-top: 32px;
+}
+.mt16px{
+    margin-top: 16px;
+}
+
+.width-20 {
+    width: 20%;
+}
+.width-30 {
+    width: 30%;
+}
+.width-50 {
+    width: 50%;
+}
+.width-70 {
+    width: 70%;
+}

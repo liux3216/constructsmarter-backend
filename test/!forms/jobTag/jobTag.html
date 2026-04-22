@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JOB TAG</title>
+        <link rel = "stylesheet" href = "./style.css">
+    </head>
+    <body>
+        <img class = "logo" src = "./logo.png" alt = "logo image"/>
+        <div class = "text0">JOB TAG</div>
+        <hr/>
+        <table class = "mt32px">
+            <tr>
+                <td>
+                    <div class = "text1">Project Manager</div>
+                    <div class = "text2 text-right">{{projectManager}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Project Number</div>
+                    <div class = "text2 text-right">{{projectNumber}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Client Requestor Name</div>
+                    <div class = "text2 text-right">{{requestor}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class = "text1">Client Name</div>
+                    <div class = "text2 text-right">{{clientName}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Client PO</div>
+                    <div class = "text2 text-right">{{clientPONumber}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Client Project Name / Project Number / Job Number</div>
+                    <div class = "text2 text-right">{{clientProjectNumber}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan = "3">
+                    <div class = "text1">Job Site</div>
+                    <div class = "text2 text-right">{{jobSite}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class = "text1">Technician Name</div>
+                    <div class = "text2 text-right">{{memberName}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Date Submitted</div>
+                    <div class = "text2 text-right">{{submitDate}} {{submitTime}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Supervisor Name</div>
+                    <div class = "text2 text-right">{{supervisor}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class = "text1">PreWork Driver</div>
+                    <div class = "text2 text-right">{{preWorkDriver}}</div>
+                    <div class = "text1">PostWork Driver</div>
+                    <div class = "text2 text-right">{{postWorkDriver}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Travel Start</div>
+                    <div class = "text2 text-right">{{travelStartDate}} {{travelStartTime}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Work Start</div>
+                    <div class = "text2 text-right">{{workStartDate}} {{workStartTime}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class = "text1">Had Lunch</div>
+                    <div class = "text2 text-right">{{hadLunch}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Work End</div>
+                    <div class = "text2 text-right">{{workEndDate}} {{workEndTime}}</div>
+                </td>
+                <td>
+                    <div class = "text1">Travel End</div>
+                    <div class = "text2 text-right">{{travelEndDate}} {{travelEndTime}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan = "3">
+                    <div class = "text1">Description - Work Requested</div>
+                    <div class = "text2 text-right">{{workRequestedText}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan = "3">
+                    <div class = "text1">Description - Work Performed</div>
+                    <div class = "text2 text-right">{{workPerformedText}}</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan = "3">
+                    <div class = "text1">Additional Information</div>
+                    <div class = "text2 text-right">{{additionalInfoText}}</div>
+                </td>
+            </tr>
+        </table>
+        <div class = "text1 mt16px">Technician Signature</div>
+        <table>
+            <tr>
+                <td>
+                    <img src = "{{techSign}}" alt = "technician signature image"/>
+                </td>
+            </tr>
+        </table>
+        <div class = "text1 mt16px">Client Supervisor Signature</div>
+        <table>
+            <tr>
+                <td>
+                    <img src = "{{clientSign}}" alt = "client supervisor signature image"/>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
