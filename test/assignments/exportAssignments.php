@@ -25,7 +25,7 @@ $projectNameSql = "CONCAT_WS(' - ',
     NULLIF(TRIM(`org`.`name`), ''),
     NULLIF(TRIM(`p`.`clientProjectNumber`), '')
 )";
-$userNameSql = "COALESCE(CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assignedUser`.`lastName`), '')";
+$userNameSql = "CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assignedUser`.`lastName`)";
 
 $COLUMN_MAP = [
     "projectName"    => ["sql" => $projectNameSql, "label" => "Project Name"],
@@ -42,9 +42,9 @@ $COLUMN_MAP = [
     "void"           => ["sql" => "`assignments`.`void`", "label" => "Void"],
     "voidReason"     => ["sql" => "`assignments`.`voidReason`", "label" => "Void Reason"],
     "validateReason" => ["sql" => "`assignments`.`validateReason`", "label" => "Validate Reason"],
-    "creatorName"    => ["sql" => "COALESCE(CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`), '')", "label" => "Creator"],
+    "creatorName"    => ["sql" => "CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`)", "label" => "Creator"],
     "createdAt"      => ["sql" => "`assignments`.`createdAt`", "label" => "Created At"],
-    "updaterName"    => ["sql" => "COALESCE(CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`), '')", "label" => "Updater"],
+    "updaterName"    => ["sql" => "CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`)", "label" => "Updater"],
     "updatedAt"      => ["sql" => "`assignments`.`updatedAt`", "label" => "Updated At"],
 ];
 
@@ -81,9 +81,9 @@ $fromSql = "FROM `assignments`
 LEFT JOIN `works` `w` ON `w`.`id` = `assignments`.`workId`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
-LEFT JOIN `users` `assignedUser` ON CAST(`assignedUser`.`id` AS CHAR) = `assignments`.`userId`
-LEFT JOIN `users` `creatorUser` ON CAST(`creatorUser`.`id` AS CHAR) = `assignments`.`creatorId`
-LEFT JOIN `users` `updaterUser` ON CAST(`updaterUser`.`id` AS CHAR) = `assignments`.`updaterId`";
+LEFT JOIN `users` `assignedUser` ON `assignedUser`.`id` = `assignments`.`userId`
+LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `assignments`.`creatorId`
+LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `assignments`.`updaterId`";
 
 $search->when(
     array_key_exists("projectName", $_POST) && $_POST["projectName"] !== "",

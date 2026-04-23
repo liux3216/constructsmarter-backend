@@ -29,11 +29,11 @@ function yesNoFilterValue($value): ?string {
 $fromSql = "FROM `works`
 LEFT JOIN `projects` `p` ON `p`.`id` = `works`.`projectId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
-LEFT JOIN `users` `supervisorUser` ON CAST(`supervisorUser`.`id` AS CHAR) = `works`.`supervisorId`
+LEFT JOIN `users` `supervisorUser` ON `supervisorUser`.`id` = `works`.`supervisorId`
 LEFT JOIN `contacts` `siteContact` ON `siteContact`.`id` = `works`.`siteContactId`
-LEFT JOIN `users` `leadUser` ON CAST(`leadUser`.`id` AS CHAR) = `works`.`leadId`
-LEFT JOIN `users` `creatorUser` ON CAST(`creatorUser`.`id` AS CHAR) = `works`.`creatorId`
-LEFT JOIN `users` `updaterUser` ON CAST(`updaterUser`.`id` AS CHAR) = `works`.`updaterId`";
+LEFT JOIN `users` `leadUser` ON `leadUser`.`id` = `works`.`leadId`
+LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `works`.`creatorId`
+LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `works`.`updaterId`";
 $likeFields = [
     "location",
     "description",
@@ -115,39 +115,24 @@ $works = $db->all(
     `works`.`startTime`,
     `works`.`endTime`,
     `works`.`allDay`,
-    COALESCE(
-        CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`),
-        ''
-    ) AS `supervisorName`,
+    CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
     `works`.`supervisorId`,
     `works`.`siteContactId`,
-    COALESCE(
-        CONCAT_WS(' ', `siteContact`.`firstName`, `siteContact`.`middleName`, `siteContact`.`lastName`),
-        ''
-    ) AS `siteContactName`,
+    CONCAT_WS(' ', `siteContact`.`firstName`, `siteContact`.`middleName`, `siteContact`.`lastName`) AS `siteContactName`,
     `works`.`cadRequired`,
     `works`.`reportRequired`,
     `works`.`waiveJSA`,
     `works`.`leadId`,
-    COALESCE(
-        CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`),
-        ''
-    ) AS `leadName`,
+    CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`) AS `leadName`,
     `works`.`description`,
     `works`.`void`,
     `works`.`voidReason`,
     `works`.`validateReason`,
     `works`.`creatorId`,
-    COALESCE(
-        CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`),
-        ''
-    ) AS `creatorName`,
+    CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`) AS `creatorName`,
     `works`.`createdAt`,
     `works`.`updaterId`,
-    COALESCE(
-        CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`),
-        ''
-    ) AS `updaterName`,
+    CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`) AS `updaterName`,
     `works`.`updatedAt`
     $fromSql
     $whereSql

@@ -43,7 +43,7 @@ CONCAT_WS(' ', `supById`.`firstName`, `supById`.`middleName`, `supById`.`lastNam
 '' AS `fieldSupervisorEmail`,
 `w`.`siteContactId`,
 CONCAT_WS(' ', `c`.`firstName`, `c`.`middleName`, `c`.`lastName`) AS `siteContactName`,
-COALESCE(`c`.`phoneNumber`, `c`.`directNumber`, '') AS `siteContactMobile`,
+`c`.`phoneNumber`, `c`.`directNumber`) AS `siteContactMobile`,
 `w`.`cadRequired`,
 `w`.`reportRequired`,
 `w`.`waiveJSA`,
@@ -61,8 +61,8 @@ CONCAT_WS(' ', `updaterById`.`firstName`, `updaterById`.`middleName`, `updaterBy
 `w`.`updatedAt`,
 
 
-COALESCE(`w`.`folderId`, '') AS `attachmentFolderId`,
-COALESCE(`w`.`folderId`, '') AS `folderId`,
+`w`.`folderId` AS `attachmentFolderId`,
+`w`.`folderId` AS `folderId`,
 '[]' AS `workFiles`,
 '[]' AS `labors`
 
@@ -71,9 +71,9 @@ FROM `works` `w`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
 LEFT JOIN `contacts` `c` ON `c`.`id` = `w`.`siteContactId`
-LEFT JOIN `users` `supById` ON CAST(`supById`.`id` AS CHAR) = `w`.`supervisorId`
-LEFT JOIN `users` `creatorById` ON CAST(`creatorById`.`id` AS CHAR) = `w`.`creatorId`
-LEFT JOIN `users` `updaterById` ON CAST(`updaterById`.`id` AS CHAR) = `w`.`updaterId`
+LEFT JOIN `users` `supById` ON `supById`.`id` = `w`.`supervisorId`
+LEFT JOIN `users` `creatorById` ON `creatorById`.`id` = `w`.`creatorId`
+LEFT JOIN `users` `updaterById` ON `updaterById`.`id` = `w`.`updaterId`
 LEFT JOIN `users` `leadById` ON `leadById`.`id` = `w`.`leadId`
 WHERE `w`.`id` = ?;";
 

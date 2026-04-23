@@ -31,9 +31,12 @@ $fromSql = "FROM `assignments`
 LEFT JOIN `works` `w` ON `w`.`id` = `assignments`.`workId`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
-LEFT JOIN `users` `assignedUser` ON CAST(`assignedUser`.`id` AS CHAR) = `assignments`.`userId`
-LEFT JOIN `users` `creatorUser` ON CAST(`creatorUser`.`id` AS CHAR) = `assignments`.`creatorId`
-LEFT JOIN `users` `updaterUser` ON CAST(`updaterUser`.`id` AS CHAR) = `assignments`.`updaterId`";
+LEFT JOIN `users` `assignedUser` ON `assignedUser`.`id` = `assignments`.`userId`
+LEFT JOIN `users` `supervisorUser` ON `supervisorUser`.`id` = `w`.`supervisorId`
+LEFT JOIN `users` `leadUser` ON `leadUser`.`id` = `w`.`leadId`
+LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `assignments`.`creatorId`
+LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `assignments`.`updaterId`
+";
 
 $search->when(
     array_key_exists("projectName", $_POST) && $_POST["projectName"] !== "",
@@ -119,28 +122,25 @@ $assignments = $db->all(
     `w`.`location` AS `workLocation`,
     `w`.`startTime`,
     `w`.`endTime`,
+    `w`.`allDay`,
     `assignments`.`userId`,
-    COALESCE(
-        CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assignedUser`.`lastName`),
-        ''
-    ) AS `userName`,
+    CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assignedUser`.`lastName`) AS `userName`,
     `assignments`.`laborCategory`,
     `assignments`.`fleetNumber`,
     `assignments`.`perDiem`,
+    CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
+    `w`.`supervisorId`,
+    `w`.`leadId`,
+    CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`) AS `leadName`, 
+
     `assignments`.`void`,
     `assignments`.`voidReason`,
     `assignments`.`validateReason`,
     `assignments`.`creatorId`,
-    COALESCE(
-        CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`),
-        ''
-    ) AS `creatorName`,
+    CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`) AS `creatorName`,
     `assignments`.`createdAt`,
     `assignments`.`updaterId`,
-    COALESCE(
-        CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`),
-        ''
-    ) AS `updaterName`,
+    CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`) AS `updaterName`,
     `assignments`.`updatedAt`
     $fromSql
     $whereSql

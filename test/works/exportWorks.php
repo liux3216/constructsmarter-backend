@@ -34,18 +34,18 @@ $COLUMN_MAP = [
     "startTime"       => ["sql" => "`works`.`startTime`", "label" => "Start Time"],
     "endTime"         => ["sql" => "`works`.`endTime`", "label" => "End Time"],
     "allDay"          => ["sql" => "`works`.`allDay`", "label" => "All Day"],
-    "supervisorName"  => ["sql" => "COALESCE(CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`), '')", "label" => "Supervisor"],
-    "siteContactName" => ["sql" => "COALESCE(CONCAT_WS(' ', `siteContact`.`firstName`, `siteContact`.`middleName`, `siteContact`.`lastName`), '')", "label" => "Site Contact"],
+    "supervisorName"  => ["sql" => "CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`)", "label" => "Supervisor"],
+    "siteContactName" => ["sql" => "CONCAT_WS(' ', `siteContact`.`firstName`, `siteContact`.`middleName`, `siteContact`.`lastName`)", "label" => "Site Contact"],
     "cadRequired"     => ["sql" => "`works`.`cadRequired`", "label" => "CAD Required"],
     "reportRequired"  => ["sql" => "`works`.`reportRequired`", "label" => "Report Required"],
     "waiveJSA"        => ["sql" => "`works`.`waiveJSA`", "label" => "Waive JSA"],
-    "leadName"        => ["sql" => "COALESCE(CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`), '')", "label" => "Lead"],
+    "leadName"        => ["sql" => "CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`)", "label" => "Lead"],
     "description"     => ["sql" => "`works`.`description`", "label" => "Description"],
     "void"            => ["sql" => "`works`.`void`", "label" => "Void"],
     "voidReason"      => ["sql" => "`works`.`voidReason`", "label" => "Void Reason"],
-    "creatorName"     => ["sql" => "COALESCE(CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`), '')", "label" => "Creator"],
+    "creatorName"     => ["sql" => "CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`)", "label" => "Creator"],
     "createdAt"       => ["sql" => "`works`.`createdAt`", "label" => "Created At"],
-    "updaterName"     => ["sql" => "COALESCE(CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`), '')", "label" => "Updater"],
+    "updaterName"     => ["sql" => "CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`)", "label" => "Updater"],
     "updatedAt"       => ["sql" => "`works`.`updatedAt`", "label" => "Updated At"],
 ];
 
@@ -81,11 +81,11 @@ $search = new SearchHelper("works");
 $fromSql = "FROM `works`
 LEFT JOIN `projects` `p` ON `p`.`id` = `works`.`projectId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
-LEFT JOIN `users` `supervisorUser` ON CAST(`supervisorUser`.`id` AS CHAR) = `works`.`supervisorId`
+LEFT JOIN `users` `supervisorUser` ON `supervisorUser`.`id` = `works`.`supervisorId`
 LEFT JOIN `contacts` `siteContact` ON `siteContact`.`id` = `works`.`siteContactId`
-LEFT JOIN `users` `leadUser` ON CAST(`leadUser`.`id` AS CHAR) = `works`.`leadId`
-LEFT JOIN `users` `creatorUser` ON CAST(`creatorUser`.`id` AS CHAR) = `works`.`creatorId`
-LEFT JOIN `users` `updaterUser` ON CAST(`updaterUser`.`id` AS CHAR) = `works`.`updaterId`";
+LEFT JOIN `users` `leadUser` ON `leadUser`.`id` = `works`.`leadId`
+LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `works`.`creatorId`
+LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `works`.`updaterId`";
 $likeFields = [
     "location",
     "description",

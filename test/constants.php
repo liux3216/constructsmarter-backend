@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apache/conf/constants.php";
+require_once "/home/bitnami/constants.php";
 // $mainIP
 // $mainRoot 
 // $sqlInfo
@@ -23,7 +23,6 @@ $testerEmails = [
 ];
 $roots = [
     "test" => "/opt/bitnami/apache/htdocs/test", 
-    "mti" => "/opt/bitnami/apache/htdocs/mti"
 ];
 $profileFolderId = "a4c1d0dcd82a9c9b6938b30acd1787c4";
 $trainingProblemFolderId = "8fbfe7d21b41f3e2d5f2cae5ffbbe2b5";
