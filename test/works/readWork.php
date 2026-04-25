@@ -43,7 +43,7 @@ CONCAT_WS(' ', `supById`.`firstName`, `supById`.`middleName`, `supById`.`lastNam
 '' AS `fieldSupervisorEmail`,
 `w`.`siteContactId`,
 CONCAT_WS(' ', `c`.`firstName`, `c`.`middleName`, `c`.`lastName`) AS `siteContactName`,
-`c`.`phoneNumber`, `c`.`directNumber`) AS `siteContactMobile`,
+COALESCE(`c`.`phoneNumber`, `c`.`directNumber`) AS `siteContactMobile`,
 `w`.`cadRequired`,
 `w`.`reportRequired`,
 `w`.`waiveJSA`,
@@ -61,8 +61,7 @@ CONCAT_WS(' ', `updaterById`.`firstName`, `updaterById`.`middleName`, `updaterBy
 `w`.`updatedAt`,
 
 
-`w`.`folderId` AS `attachmentFolderId`,
-`w`.`folderId` AS `folderId`,
+`w`.`folderId`,
 '[]' AS `workFiles`,
 '[]' AS `labors`
 

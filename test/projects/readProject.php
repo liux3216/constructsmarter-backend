@@ -103,4 +103,4 @@ if(!$row){
     http_response_code(400);
     exit(json_encode(["msg" => "The project is not found."]));
 }
-exit(json_encode([$row]));
+exit(json_encode($row));
