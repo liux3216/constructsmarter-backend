@@ -1,5 +1,6 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+require_once __DIR__ . "/jobTagPDF.php";
 
 function requireJobTagDateTime(array $src, string $key): ?string
 {
@@ -21,6 +22,17 @@ function requireJobTagDateTime(array $src, string $key): ?string
     return $value;
 }
 
+function optionalJobTagSignature(array $src, array $keys): ?string
+{
+    foreach ($keys as $key) {
+        $value = requireField($src, $key, 0, 2000000, false);
+        if ($value !== null) {
+            return $value;
+        }
+    }
+    return null;
+}
+
 try {
     if ($_SERVER["REQUEST_METHOD"] !== "POST") {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
@@ -28,7 +40,7 @@ try {
 
     $id = requireInt($_POST, "assignmentId", 1, null, true);
     $assignment = $db->one(
-        "SELECT `id` FROM `assignments` WHERE `id` = ?;",
+        "SELECT `id`, `jobTagFileId` FROM `assignments` WHERE `id` = ?;",
         [$id],
         __FILE__,
         __LINE__
@@ -38,6 +50,8 @@ try {
     }
 
     $data = [
+        "preDriver"       => requireEnum($_POST, "preDriver", ["yes", "no"], false, true),
+        "postDriver"      => requireEnum($_POST, "postDriver", ["yes", "no"], false, true),
         "travelStartTime" => requireJobTagDateTime($_POST, "travelStartTime"),
         "workStartTime"   => requireJobTagDateTime($_POST, "workStartTime"),
         "hadLunch"        => requireEnum($_POST, "hadLunch", ["yes", "no"], false, true),
@@ -50,6 +64,10 @@ try {
         "updaterId"       => $userId,
         "updatedAt"       => date("Y-m-d H:i:s"),
     ];
+    $signatures = [
+        "techSign" => optionalJobTagSignature($_POST, ["techSign", "technicianSignature"]),
+        "clientSign" => optionalJobTagSignature($_POST, ["clientSign", "clientSupervisorSignature", "clientSignature"]),
+    ];
 
     $setClause = implode(
         ", ",
@@ -59,9 +77,20 @@ try {
 
     $db->begin();
     $db->exec("UPDATE `assignments` SET $setClause WHERE `id` = :id;", $data, __FILE__, __LINE__);
+    $pdfId = generateJobTagPdf($id, $assignment["jobTagFileId"], $signatures);
+    $db->exec(
+        "UPDATE `assignments` SET `jobTagFileId` = ? WHERE `id` = ?;",
+        [$pdfId, $id],
+        __FILE__,
+        __LINE__
+    );
     $db->commit();
 
-    jsonResponse(200, ["id" => $id]);
+    jsonResponse(200, [
+        "id" => $id,
+        "pdfId" => $pdfId,
+        "pdfUrl" => getObjectUrl($privateBucket, $pdfId, "jobTag_$id.pdf"),
+    ]);
 
 } catch (InvalidArgumentException $e) {
     $db->rollBack();

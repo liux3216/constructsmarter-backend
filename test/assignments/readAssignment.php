@@ -41,9 +41,11 @@ CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assigne
 `a`.`workRequired`,
 `a`.`workPerformed`,
 `a`.`additionalInfo`,
+`a`.`jobTagFileId`,
 CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
 `w`.`supervisorId`,
 `w`.`leadId`,
+`w`.`waiveJSA`, 
 CONCAT_WS(' ', `leadUser`.`firstName`, `leadUser`.`middleName`, `leadUser`.`lastName`) AS `leadName`, 
 `p`.`description` AS `projectDescription`,
 `w`.`description` AS `workDescription`,
@@ -61,7 +63,11 @@ CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUs
 `a`.`createdAt`,
 `a`.`updaterId`,
 CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`) AS `updaterName`,
-`a`.`updatedAt`
+`a`.`updatedAt`,
+
+`a`.`travelStartTime`, `a`.`workStartTime`, `a`.`hadLunch`, `a`.`workEndTime`, `a`.`travelEndTime`, `a`.`workFinished`, `a`.`workRequired`, `a`.`workPerformed`, `a`.`additionalInfo`, 
+`a`.`jobTagFileId`
+
 FROM `assignments` `a`
 LEFT JOIN `works` `w` ON `w`.`id` = `a`.`workId`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`

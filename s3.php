@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apache/conf/constants.php"; // $awsCredentials
+require_once "/home/bitnami/constants.php"; // $awsCredentials
 require "/opt/bitnami/apache/htdocs/components/vendor/autoload.php";
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
