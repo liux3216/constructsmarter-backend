@@ -1,6 +1,7 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/components/vendor/autoload.php";
 require_once "/opt/bitnami/apache/htdocs/s3.php";
+require_once "/opt/bitnami/apache/htdocs/test/constants.php";
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -9,12 +10,12 @@ const JOB_TAG_FOLDER_ID = "5171ef7b62ffe9b115929581d047f988";
 
 function generateJobTagPdf(int $assignmentId, ?string $pdfId = null, array $signatures = []): string
 {
-    global $db, $privateBucket, $userId;
+    global $db, $privateBucket, $userId, $appName;
 
     $data = getJobTagPdfData($assignmentId);
     $data["techSign"] = $signatures["techSign"] ?? "";
     $data["clientSign"] = $signatures["clientSign"] ?? "";
-
+    $data["appName"] = $appName;
     $options = new Options();
     $options->set("defaultFont", "DejaVu Sans");
     $options->set("isHtml5ParserEnabled", true);
@@ -108,6 +109,7 @@ function getJobTagPdfData(int $assignmentId): array
             `a`.`workRequired`,
             `a`.`workPerformed`,
             `a`.`additionalInfo`,
+            `a`.`coords`,
             `a`.`updatedAt`,
             `a`.`createdAt`
         FROM `assignments` `a`
@@ -170,4 +172,17 @@ function jobTagTime(?string $value): string
     }
     $time = strtotime($value);
     return $time ? date("g:i A", $time) : $value;
+}
+
+function jobTagCoords(?string $value): array
+{
+    if (!$value) {
+        return ["latLong" => "", "accuracy" => ""];
+    }
+
+    $parts = array_map("trim", explode(",", $value));
+    return [
+        "latLong" => count($parts) >= 2 ? $parts[0] . "," . $parts[1] : "",
+        "accuracy" => $parts[2] ?? "",
+    ];
 }

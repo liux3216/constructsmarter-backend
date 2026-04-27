@@ -33,6 +33,18 @@ function optionalJobTagSignature(array $src, array $keys): ?string
     return null;
 }
 
+function requireJobTagCoords(array $src, string $key = "coords"): ?string
+{
+    $value = requireField($src, $key, 0, 255, false);
+    if ($value === null) {
+        return null;
+    }
+    if (!preg_match('/^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?,\s*\d+(?:\.\d+)?$/', $value)) {
+        jsonResponse(422, ["msg" => "{$key} must be in format lat,long, accuracy"]);
+    }
+    return $value;
+}
+
 try {
     if ($_SERVER["REQUEST_METHOD"] !== "POST") {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
@@ -61,6 +73,7 @@ try {
         "workRequired"    => requireField($_POST, "workRequired", 0, 99999, false),
         "workPerformed"   => requireField($_POST, "workPerformed", 0, 99999, false),
         "additionalInfo"  => requireField($_POST, "additionalInfo", 0, 99999, false),
+        "coords"          => requireJobTagCoords($_POST),
         "updaterId"       => $userId,
         "updatedAt"       => date("Y-m-d H:i:s"),
     ];

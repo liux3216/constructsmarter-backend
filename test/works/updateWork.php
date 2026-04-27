@@ -35,64 +35,120 @@ function requireDateTimeField(array $src, string $key, bool $required = false): 
     return $dt->format("Y-m-d H:i:s");
 }
 
-function requireLabors(array $src): array
+function requireTechnicians(array $src): array
 {
-    if (!array_key_exists("labors", $src) || $src["labors"] === "") {
+    if (!array_key_exists("technicians", $src) || $src["technicians"] === "") {
         return [];
     }
 
-    $rawLabors = $src["labors"];
-    if (is_string($rawLabors)) {
-        $decoded = json_decode($rawLabors, true);
+    $rawTechnicians = $src["technicians"];
+    if (is_string($rawTechnicians)) {
+        $decoded = json_decode($rawTechnicians, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-            jsonResponse(422, ["msg" => "labors must be a valid JSON array."]);
+            jsonResponse(422, ["msg" => "technicians must be a valid JSON array."]);
         }
-        $rawLabors = $decoded;
+        $rawTechnicians = $decoded;
     }
 
-    if (!is_array($rawLabors)) {
-        jsonResponse(422, ["msg" => "labors must be an array."]);
+    if (!is_array($rawTechnicians)) {
+        jsonResponse(422, ["msg" => "technicians must be an array."]);
     }
 
-    $labors = [];
-    foreach ($rawLabors as $index => $labor) {
-        if (is_string($labor)) {
-            $labor = json_decode($labor, true);
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($labor)) {
-                jsonResponse(422, ["msg" => "labors[$index] must be a valid JSON object."]);
+    $technicians = [];
+    foreach ($rawTechnicians as $index => $technician) {
+        if (is_string($technician)) {
+            $technician = json_decode($technician, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($technician)) {
+                jsonResponse(422, ["msg" => "technicians[$index] must be a valid JSON object."]);
             }
         }
 
-        if (!is_array($labor)) {
-            jsonResponse(422, ["msg" => "labors[$index] must be an object."]);
+        if (!is_array($technician)) {
+            jsonResponse(422, ["msg" => "technicians[$index] must be an object."]);
         }
 
-        $labors[] = [
-            "userId"        => requireField($labor, "userId", 1, 32, true),
-            "laborCategory" => requireField($labor, "laborCategory", 1, 255, true),
-            "fleetNumber"   => requireField($labor, "fleetNumber", 0, 255, false) ?? "",
-            "perDiem"       => requireEnum($labor, "perDiem", ["yes", "no"], true, true),
+        $assignmentId = requireInt($technician, "assignmentId", 1, null, false);
+        if ($assignmentId === null && array_key_exists("id", $technician)) {
+            $assignmentId = requireInt($technician, "id", 1, null, false);
+        }
+
+        $technicians[] = [
+            "assignmentId"  => $assignmentId,
+            "userId"        => requireField($technician, "userId", 1, 32, true),
+            "laborCategory" => requireField($technician, "laborCategory", 1, 255, true),
+            "fleetNumber"   => requireField($technician, "fleetNumber", 0, 255, false) ?? "",
+            "perDiem"       => requireEnum($technician, "perDiem", ["yes", "no"], true, true),
         ];
     }
 
-    return $labors;
+    return $technicians;
 }
 
-function insertAssignments(DB $db, $workId, array $labors, string $creatorId): void
+function syncAssignments(DB $db, $workId, array $technicians, string $userId): void
 {
-    foreach ($labors as $labor) {
+    $existingRows = $db->all(
+        "SELECT `id` FROM `assignments` WHERE `workId` = ?;",
+        [$workId],
+        __FILE__,
+        __LINE__
+    );
+    $existingIds = array_map(fn($row) => (int)$row["id"], $existingRows);
+    $submittedIds = [];
+
+    foreach ($technicians as $technician) {
+        if ($technician["assignmentId"] !== null) {
+            $assignmentId = (int)$technician["assignmentId"];
+            if (in_array($assignmentId, $submittedIds, true)) {
+                throw new InvalidArgumentException("Duplicate technician assignmentId: {$assignmentId}");
+            }
+            if (!in_array($assignmentId, $existingIds, true)) {
+                throw new InvalidArgumentException("Invalid technician assignmentId: {$assignmentId}");
+            }
+
+            $submittedIds[] = $assignmentId;
+            $db->exec(
+                "UPDATE `assignments`
+                SET `userId` = ?, `laborCategory` = ?, `fleetNumber` = ?, `perDiem` = ?, `updaterId` = ?, `updatedAt` = ?
+                WHERE `id` = ? AND `workId` = ?;",
+                [
+                    $technician["userId"],
+                    $technician["laborCategory"],
+                    $technician["fleetNumber"],
+                    $technician["perDiem"],
+                    $userId,
+                    date("Y-m-d H:i:s"),
+                    $assignmentId,
+                    $workId,
+                ],
+                __FILE__,
+                __LINE__
+            );
+            continue;
+        }
+
         $db->exec(
             "INSERT INTO `assignments`
             (`workId`, `userId`, `laborCategory`, `fleetNumber`, `perDiem`, `creatorId`)
             VALUES (?, ?, ?, ?, ?, ?);",
             [
                 $workId,
-                $labor["userId"],
-                $labor["laborCategory"],
-                $labor["fleetNumber"],
-                $labor["perDiem"],
-                $creatorId,
+                $technician["userId"],
+                $technician["laborCategory"],
+                $technician["fleetNumber"],
+                $technician["perDiem"],
+                $userId,
             ],
+            __FILE__,
+            __LINE__
+        );
+    }
+
+    $deleteIds = array_values(array_diff($existingIds, $submittedIds));
+    if ($deleteIds) {
+        $placeholders = implode(", ", array_fill(0, count($deleteIds), "?"));
+        $db->exec(
+            "DELETE FROM `assignments` WHERE `workId` = ? AND `id` IN ($placeholders);",
+            [$workId, ...$deleteIds],
             __FILE__,
             __LINE__
         );
@@ -105,13 +161,15 @@ try {
     }
 
     $id = requireInt($_POST, "id", null, null, true);
-    $hasLabors = array_key_exists("labors", $_POST);
-    $labors = requireLabors($_POST);
+    $hasTechnicians = array_key_exists("technicians", $_POST);
+    $technicians = requireTechnicians($_POST);
 
     $data = [
         "projectId"       => requireInt($_POST, "projectId", null, null, true),
         "category"        => requireField($_POST, "category", 1, 255, true),
+        "subCategory"     => requireField($_POST, "subCategory", 0, 255, false) ?? "",
         "location"        => requireField($_POST, "location", 1, 255, true),
+        "jobTagLocation"  => requireEnum($_POST, "jobTagLocation", ["yes", "no"], false, true) ?? "no",
         "coords"          => requireField($_POST, "coords", 0, 255, false) ?? "",
         "startTime"       => requireDateTimeField($_POST, "startTime", true),
         "endTime"         => requireDateTimeField($_POST, "endTime", true),
@@ -139,9 +197,8 @@ try {
 
     $db->begin();
     $db->exec("UPDATE `works` SET $setClause WHERE `id` = :id;", $data, __FILE__, __LINE__);
-    if ($hasLabors) {
-        $db->exec("DELETE FROM `assignments` WHERE `workId` = ?;", [$id], __FILE__, __LINE__);
-        insertAssignments($db, $id, $labors, $userId);
+    if ($hasTechnicians) {
+        syncAssignments($db, $id, $technicians, $userId);
     }
     $db->commit();
 

@@ -39,6 +39,7 @@ $COLUMN_MAP = [
     "laborCategory"  => ["sql" => "`assignments`.`laborCategory`", "label" => "Labor Category"],
     "fleetNumber"    => ["sql" => "`assignments`.`fleetNumber`", "label" => "Fleet Number"],
     "perDiem"        => ["sql" => "`assignments`.`perDiem`", "label" => "Per Diem"],
+    "coords"         => ["sql" => "`assignments`.`coords`", "label" => "Coords"],
     "void"           => ["sql" => "`assignments`.`void`", "label" => "Void"],
     "voidReason"     => ["sql" => "`assignments`.`voidReason`", "label" => "Void Reason"],
     "validateReason" => ["sql" => "`assignments`.`validateReason`", "label" => "Validate Reason"],
@@ -103,7 +104,7 @@ if (!array_key_exists("void", $_POST)) {
     $search->equals("void", $_POST["void"]);
 }
 
-foreach (["laborCategory", "fleetNumber", "voidReason", "validateReason"] as $field) {
+foreach (["laborCategory", "fleetNumber", "coords", "voidReason", "validateReason"] as $field) {
     $search->like($field, $_POST[$field] ?? null);
 }
 foreach (["workId", "userId", "creatorId", "updaterId"] as $field) {

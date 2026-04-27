@@ -51,6 +51,7 @@ $equalFields = [
 ];
 $yesNoFields = [
     "allDay",
+    "jobTagLocation",
     "cadRequired",
     "reportRequired",
     "waiveJSA",
@@ -111,6 +112,7 @@ $works = $db->all(
     `works`.`category`,
     `works`.`subCategory`,
     `works`.`location`,
+    `works`.`jobTagLocation`,
     `works`.`coords`,
     `works`.`startTime`,
     `works`.`endTime`,

@@ -1,6 +1,18 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 
+function requireAssignmentCoords(array $src, string $key = "coords"): ?string
+{
+    $value = requireField($src, $key, 0, 255, false);
+    if ($value === null) {
+        return null;
+    }
+    if (!preg_match('/^-?\d+(?:\.\d+)?,\s*-?\d+(?:\.\d+)?,\s*\d+(?:\.\d+)?$/', $value)) {
+        jsonResponse(422, ["msg" => "{$key} must be in format lat,long, accuracy"]);
+    }
+    return $value;
+}
+
 try {
     if ($_SERVER["REQUEST_METHOD"] !== "POST") {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
@@ -12,6 +24,7 @@ try {
         "laborCategory" => requireField($_POST, "laborCategory", 1, 255, true),
         "fleetNumber"   => requireField($_POST, "fleetNumber", 0, 255, false) ?? "",
         "perDiem"       => requireEnum($_POST, "perDiem", ["yes", "no"], true, true),
+        "coords"        => requireAssignmentCoords($_POST),
         "creatorId"     => $userId,
     ];
 

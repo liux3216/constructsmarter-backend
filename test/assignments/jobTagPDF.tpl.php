@@ -23,8 +23,17 @@
             vertical-align: middle;
         }
         .logo {
-            width: 120px;
+            width: auto;
+            height: auto;
+            max-width: 120px;
             max-height: 52px;
+        }
+        .appName {
+            margin-top: 5px;
+            color: #475569;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1.2;
         }
         .titleWrap {
             text-align: right;
@@ -88,6 +97,9 @@
     <div class="header">
         <div class="logoWrap">
             <img class="logo" src="/opt/bitnami/apache/htdocs/test/logo.png" alt="Construct Smarter">
+            <?php if (!empty($data["appName"])): ?>
+                <div class="appName"><?= jobTagH($data["appName"]) ?></div>
+            <?php endif; ?>
         </div>
         <div class="titleWrap">
             <div class="title">JOB TAG</div>
@@ -206,6 +218,23 @@
                 <div class="value"><?= jobTagH($data["additionalInfo"] ?? "") ?></div>
             </td>
         </tr>
+        <?php $coords = jobTagCoords($data["coords"] ?? null); ?>
+        <?php if ($coords["latLong"] !== ""): ?>
+            <tr>
+                <td>
+                    <div class="label">Current Coordinates</div>
+                    <div class="value">
+                        <a href="https://www.google.com/maps/search/<?= jobTagH($coords["latLong"]) ?>">
+                            <?= jobTagH($coords["latLong"]) ?>
+                        </a>
+                    </div>
+                    <?php if ($coords["accuracy"] !== ""): ?>
+                        <div class="label" style="margin-top:8px;">Accuracy</div>
+                        <div class="value"><?= jobTagH($coords["accuracy"]) ?> meters</div>
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endif; ?>
     </table>
 
     <div class="section">Signatures</div>

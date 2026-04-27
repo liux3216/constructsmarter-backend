@@ -66,6 +66,7 @@ if (!array_key_exists("void", $_POST)) {
 $likeFields = [
     "laborCategory",
     "fleetNumber",
+    "coords",
     "voidReason",
     "validateReason",
 ];
@@ -128,6 +129,7 @@ $assignments = $db->all(
     `assignments`.`laborCategory`,
     `assignments`.`fleetNumber`,
     `assignments`.`perDiem`,
+    `assignments`.`coords`,
     CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
     `w`.`supervisorId`,
     `w`.`leadId`,

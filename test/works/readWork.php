@@ -16,8 +16,8 @@ if ($id === "") {
  * Current assumptions:
  *   or a user email, so both paths are supported.
  * - The current `works` table does not store `fieldSupervisorName`,
- *   `fieldSupervisorEmail`, `workFiles`, or `labors`, so empty defaults are
- *   returned for those fields.
+ *   `fieldSupervisorEmail`, or `workFiles`, so empty defaults are returned
+ *   for those fields.
  */
 $sql = "SELECT
 `p`.`organizationId`, 
@@ -31,6 +31,7 @@ CONCAT_WS(' - ',
 `w`.`category`,
 `w`.`subCategory`,
 `w`.`location`,
+`w`.`jobTagLocation`,
 `w`.`coords`,
 `p`.`location` AS `projectLocation`,
 `p`.`coords` AS `projectCoords`,
@@ -62,8 +63,7 @@ CONCAT_WS(' ', `updaterById`.`firstName`, `updaterById`.`middleName`, `updaterBy
 
 
 `w`.`folderId`,
-'[]' AS `workFiles`,
-'[]' AS `labors`
+'[]' AS `workFiles`
 
 
 FROM `works` `w`
@@ -81,5 +81,24 @@ if (!$row) {
     http_response_code(400);
     exit(json_encode(["msg" => "The work is not found."]));
 }
+
+$technicians = $db->all(
+    "SELECT
+        `a`.`id` AS `assignmentId`,
+        `a`.`userId`,
+        CONCAT_WS(' ', `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `userName`,
+        `a`.`laborCategory`,
+        `a`.`fleetNumber`,
+        `a`.`perDiem`
+    FROM `assignments` `a`
+    LEFT JOIN `users` `u` ON `u`.`id` = `a`.`userId`
+    WHERE `a`.`workId` = ? AND `a`.`void` = 'no'
+    ORDER BY `a`.`createdAt` ASC;",
+    [$id],
+    __FILE__,
+    __LINE__
+);
+
+$row["technicians"] = $technicians;
 
 exit(json_encode($row));

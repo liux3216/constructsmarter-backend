@@ -31,6 +31,7 @@ $COLUMN_MAP = [
     "category"        => ["sql" => "`works`.`category`", "label" => "Category"],
     "subCategory"     => ["sql" => "`works`.`subCategory`", "label" => "Sub Category"],
     "location"        => ["sql" => "`works`.`location`", "label" => "Location"],
+    "jobTagLocation"  => ["sql" => "`works`.`jobTagLocation`", "label" => "Job Tag Location"],
     "startTime"       => ["sql" => "`works`.`startTime`", "label" => "Start Time"],
     "endTime"         => ["sql" => "`works`.`endTime`", "label" => "End Time"],
     "allDay"          => ["sql" => "`works`.`allDay`", "label" => "All Day"],
@@ -103,6 +104,7 @@ $equalFields = [
 ];
 $yesNoFields = [
     "allDay",
+    "jobTagLocation",
     "cadRequired",
     "reportRequired",
     "waiveJSA",
