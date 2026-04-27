@@ -8,7 +8,7 @@ if(
 ) jsonResponse(409, ["msg" => "Missing parameters"]);
 $week = $_POST["week"];
 if (!isValidWeekNum($week)) jsonResponse(422, ["msg" => "Invalid week."]);
-$approverEmail = "jun909l@yahoo.com";
+$approverEmail = "d.agama@bessmti.com";
 if(array_key_exists("employeeId", $_POST)){
     // todo: check permission
     $employeeId = $_POST["employeeId"];

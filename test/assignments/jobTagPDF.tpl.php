@@ -106,13 +106,13 @@
                 <div class="value"><?= jobTagH($data["projectNumber"] ?? "") ?></div>
             </td>
             <td>
-                <div class="label">Client Requestor Name</div>
+                <div class="label">Site Contact</div>
                 <div class="value"><?= jobTagH($data["requestor"] ?? "") ?></div>
             </td>
         </tr>
         <tr>
             <td>
-                <div class="label">Client Name</div>
+                <div class="label">Organization</div>
                 <div class="value"><?= jobTagH($data["clientName"] ?? "") ?></div>
             </td>
             <td>
@@ -222,7 +222,7 @@
                 </div>
             </td>
             <td>
-                <div class="label">Client Supervisor Signature</div>
+                <div class="label">Site Contact Signature</div>
                 <div class="signatureBox">
                     <?php if (!empty($data["clientSign"])): ?>
                         <img class="signature" src="<?= jobTagH($data["clientSign"]) ?>" alt="Client supervisor signature">
