@@ -42,6 +42,11 @@ CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assigne
 `a`.`workPerformed`,
 `a`.`additionalInfo`,
 `a`.`jobTagFileId`,
+`a`.`jsaContent`,
+`a`.`jsaSaveTime`,
+`a`.`jsaSubmitTime`,
+`a`.`jsaStatus`,
+`a`.`jsaFileId`,
 `w`.`jobTagLocation`,
 CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
 `w`.`supervisorId`,
@@ -86,6 +91,12 @@ $row = $db->one($sql, [$id], __FILE__, __LINE__);
 if (!$row) {
     http_response_code(400);
     exit(json_encode(["msg" => "The assignment is not found."]));
+}
+
+$row["jobSafetyAnalysisContent"] = [];
+if (!empty($row["jsaContent"])) {
+    $decoded = json_decode($row["jsaContent"], true);
+    $row["jobSafetyAnalysisContent"] = is_array($decoded) ? $decoded : [];
 }
 
 exit(json_encode($row));

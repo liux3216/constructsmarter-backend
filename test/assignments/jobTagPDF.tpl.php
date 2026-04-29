@@ -1,3 +1,54 @@
+<?php
+$data = is_array($data ?? null) ? $data : [];
+if(!function_exists("jobTagH")){
+    function jobTagH($value): string
+    {
+        return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+    }
+}
+if(!function_exists("jobTagYesNo")){
+    function jobTagYesNo(?string $value): string
+    {
+        if($value === null || $value === ""){
+            return "";
+        }
+        return strtolower($value) === "yes" ? "Yes" : "No";
+    }
+}
+if(!function_exists("jobTagDate")){
+    function jobTagDate(?string $value): string
+    {
+        if(!$value){
+            return "";
+        }
+        $time = strtotime($value);
+        return $time ? date("Y-m-d", $time) : $value;
+    }
+}
+if(!function_exists("jobTagTime")){
+    function jobTagTime(?string $value): string
+    {
+        if(!$value){
+            return "";
+        }
+        $time = strtotime($value);
+        return $time ? date("g:i A", $time) : $value;
+    }
+}
+if(!function_exists("jobTagCoords")){
+    function jobTagCoords(?string $value): array
+    {
+        if(!$value){
+            return ["latLong" => "", "accuracy" => ""];
+        }
+        $parts = array_map("trim", explode(",", $value));
+        return [
+            "latLong" => count($parts) >= 2 ? $parts[0] . "," . $parts[1] : "",
+            "accuracy" => $parts[2] ?? "",
+        ];
+    }
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
