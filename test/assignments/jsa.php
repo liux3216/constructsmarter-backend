@@ -6,9 +6,19 @@ require_once __DIR__ . "/jsaPDF.php";
 
 header("Content-Type: application/json");
 
-$assignmentId = trim((string)($_POST["assignmentId"] ?? $_POST["AssignmentId"] ?? $_POST["id"] ?? ""));
-$action = trim((string)($_POST["action"] ?? ""));
-$forSave = filter_var($_POST["forSave"] ?? false, FILTER_VALIDATE_BOOLEAN);
+function jsaDecodeContent(mixed $value): array
+{
+    if(is_array($value)) return $value;
+    if(!is_string($value) || $value === "") return [];
+    $decoded = json_decode($value, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+$jsaFormValues = jsaDecodeContent($_POST["formValues"] ?? null);
+
+$assignmentId = trim((string)($_POST["assignmentId"] ?? $_POST["AssignmentId"] ?? $_POST["id"] ?? $jsaFormValues["assignmentId"] ?? ""));
+$action = trim((string)($_POST["action"] ?? $jsaFormValues["action"] ?? ""));
+$forSave = filter_var($_POST["forSave"] ?? $jsaFormValues["forSave"] ?? false, FILTER_VALIDATE_BOOLEAN);
 
 $jsaScalarKeys = [
     "assignmentId", "formId", "openDateTime", "loc", "loc2", "loc3", "loc4",
@@ -27,8 +37,11 @@ $jsaJsonStringKeys = [
 
 function jsaPostValue(string $key): mixed
 {
+    global $jsaFormValues;
+
     if(array_key_exists($key, $_POST)) return $_POST[$key];
     if(array_key_exists($key."[]", $_POST)) return $_POST[$key."[]"];
+    if(array_key_exists($key, $jsaFormValues)) return $jsaFormValues[$key];
     return null;
 }
 
@@ -36,13 +49,6 @@ function jsaNormalizeArray(mixed $value): array
 {
     if($value === null || $value === "") return [];
     return is_array($value) ? array_values($value) : [$value];
-}
-
-function jsaDecodeContent(?string $value): array
-{
-    if(!$value) return [];
-    $decoded = json_decode($value, true);
-    return is_array($decoded) ? $decoded : [];
 }
 
 function jsaBuildContent(array $existingContent): array
@@ -64,7 +70,7 @@ function jsaBuildContent(array $existingContent): array
     }
     foreach($jsaJsonStringKeys as $key){
         $value = jsaPostValue($key);
-        if($value !== null && !is_array($value)){
+        if($value !== null){
             $content[$key] = $value;
         }
     }
@@ -157,7 +163,7 @@ try{
         foreach($otherAssignments as $row){
             $otherContent = jsaDecodeContent($row["jsaContent"] ?? null);
             $sign = $otherContent["jobSafetyAnalysisSign"] ?? "[]";
-            $row["data"] = json_decode((string)$sign, true) ?: [];
+            $row["data"] = jsaDecodeContent($sign);
             $row["ppe"] = empty($row["data"]) ? "no" : "yes";
             unset($row["jsaContent"]);
             $internalSigns[] = $row;
@@ -181,7 +187,7 @@ try{
     jsaUpdateContent($assignmentId, $content, $forSave, $now);
 
     if(!empty($content["jobSafetyAnalysisInternalSigns"])){
-        $internalSigns = json_decode((string)$content["jobSafetyAnalysisInternalSigns"], true);
+        $internalSigns = jsaDecodeContent($content["jobSafetyAnalysisInternalSigns"]);
         if(is_array($internalSigns)){
             foreach($internalSigns as $internalSign){
                 $internalAssignmentId = $internalSign["assignmentId"] ?? $internalSign["AssignmentId"] ?? null;
@@ -193,7 +199,7 @@ try{
                     __LINE__
                 );
                 $internalContent = jsaDecodeContent($internalAssignment["jsaContent"] ?? null);
-                $internalContent["jobSafetyAnalysisSign"] = json_encode($internalSign["data"] ?? []);
+                $internalContent["jobSafetyAnalysisSign"] = $internalSign["data"] ?? [];
                 $internalContent["status"] = $forSave ? "saved" : "submitted";
                 $internalContent["savedAt"] = $now;
                 $internalContent["savedBy"] = $userId;

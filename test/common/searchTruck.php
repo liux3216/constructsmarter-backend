@@ -5,7 +5,7 @@ if (!$q) exit(json_encode([]));
 $rows = $db->all(
     "SELECT `id` AS `value`, `truckNumber` AS `label`
      FROM `fleets`
-     WHERE `truckNumber` LIKE ?
+     WHERE `truckNumber` LIKE ? AND fleetType = \"truck\"
      ORDER BY `truckNumber`
      LIMIT 20;",
     ["%{$q}%"]
