@@ -23,7 +23,7 @@ CONCAT_WS(' - ',
 `w`.`category` AS `workCategory`,
 `w`.`subCategory` AS `workSubCategory`,
 `w`.`location`,
-`a`.`coords`,
+`w`.`coords`,
 `w`.`startTime`,
 `w`.`endTime`,
 `w`.`allDay`,
@@ -48,6 +48,28 @@ CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assigne
 `a`.`jsaStatus`,
 `a`.`jsaFileId`,
 `w`.`jobTagLocation`,
+`a`.`jobTagStatus`,
+`a`.`status`, 
+`a`.`isPreDriver`,
+`a`.`preTruckId`,
+`f1`.`truckNumber` AS `preTruckNumber`,
+`a`.`preVehicleData`,
+
+`a`.`isPostDriver`,
+`a`.`postTruckId`,
+`f2`.`truckNumber` AS `postTruckNumber`,
+`a`.`postVehicleData`,
+
+`a`.`hasPreTrailer`,
+`a`.`preTrailerId`,
+`f3`.`truckNumber` AS `preTrailerNumber`,
+`a`.`preTrailerData`,
+
+`a`.`hasPostTrailer`,
+`a`.`postTrailerId`,
+`f4`.`truckNumber` AS `postTrailerNumber`,
+`a`.`postTrailerData`,
+
 CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
 `w`.`supervisorId`,
 `w`.`leadId`,
@@ -64,6 +86,7 @@ COALESCE(`siteContact`.`directNumber`, `siteContact`.`phoneNumber`) AS `siteCont
 `a`.`void`,
 `a`.`voidReason`,
 `a`.`validateReason`,
+`a`.`status`,
 `a`.`creatorId`,
 CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUser`.`lastName`) AS `creatorName`,
 `a`.`createdAt`,
@@ -82,6 +105,10 @@ LEFT JOIN `users` `assignedUser` ON `assignedUser`.`id` = `a`.`userId`
 LEFT JOIN `users` `supervisorUser` ON `supervisorUser`.`id` = `w`.`supervisorId`
 LEFT JOIN `users` `leadUser` ON `leadUser`.`id` = `w`.`leadId`
 LEFT JOIN `contacts` `siteContact` ON `siteContact`.`id` = `w`.`siteContactId`
+LEFT JOIN `fleets` `f1` ON `f1`.`id` = `a`.`preTruckId`
+LEFT JOIN `fleets` `f2` ON `f2`.`id` = `a`.`postTruckId`
+LEFT JOIN `fleets` `f3` ON `f3`.`id` = `a`.`preTrailerId`
+LEFT JOIN `fleets` `f4` ON `f4`.`id` = `a`.`postTrailerId`
 LEFT JOIN `users` `pm` ON `pm`.`id` = `p`.`projectManagerId`
 LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `a`.`creatorId`
 LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `a`.`updaterId`
@@ -98,5 +125,18 @@ if (!empty($row["jsaContent"])) {
     $decoded = json_decode($row["jsaContent"], true);
     $row["jobSafetyAnalysisContent"] = is_array($decoded) ? $decoded : [];
 }
+
+$assignmentForms = $db->all(
+    "SELECT
+    `formName`,
+    `status`
+    FROM `assignment_forms`
+    WHERE `assignmentId` = ?
+    ORDER BY `updatedAt` DESC;",
+    [$id],
+    __FILE__,
+    __LINE__
+);
+$row["forms"] = $assignmentForms;
 
 exit(json_encode($row));

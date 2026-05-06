@@ -214,9 +214,13 @@ if(!function_exists("jobTagCoords")){
         <tr>
             <td>
                 <div class="label">PreWork Driver</div>
-                <div class="value"><?= jobTagH(jobTagYesNo($data["preDriver"] ?? null)) ?></div>
+                <div class="value"><?= jobTagH(jobTagYesNo($data["isPreDriver"] ?? null)) ?></div>
                 <div class="label" style="margin-top:8px;">PostWork Driver</div>
-                <div class="value"><?= jobTagH(jobTagYesNo($data["postDriver"] ?? null)) ?></div>
+                <div class="value"><?= jobTagH(jobTagYesNo($data["isPostDriver"] ?? null)) ?></div>
+                <div class="label" style="margin-top:8px;">PreWork Trailer</div>
+                <div class="value"><?= jobTagH(jobTagYesNo($data["hasPreTrailer"] ?? null)) ?></div>
+                <div class="label" style="margin-top:8px;">PostWork Trailer</div>
+                <div class="value"><?= jobTagH(jobTagYesNo($data["hasPostTrailer"] ?? null)) ?></div>
             </td>
             <td>
                 <div class="label">Travel Start</div>

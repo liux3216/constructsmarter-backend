@@ -121,6 +121,7 @@ $assignments = $db->all(
     `w`.`category` AS `workCategory`,
     `w`.`subCategory` AS `workSubCategory`,
     `w`.`location` AS `workLocation`,
+    `w`.`coords` AS `workCoords`,
     `w`.`startTime`,
     `w`.`endTime`,
     `w`.`allDay`,

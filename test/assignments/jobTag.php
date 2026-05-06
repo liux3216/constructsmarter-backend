@@ -45,6 +45,11 @@ function requireJobTagCoords(array $src, string $key = "coords"): ?string
     return $value;
 }
 
+function requireJobTagStatus(array $src): string
+{
+    return requireEnum($src, "action", ["Saved", "Submitted"], true, false);
+}
+
 try {
     if ($_SERVER["REQUEST_METHOD"] !== "POST") {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
@@ -62,8 +67,6 @@ try {
     }
 
     $data = [
-        "preDriver"       => requireEnum($_POST, "preDriver", ["yes", "no"], false, true),
-        "postDriver"      => requireEnum($_POST, "postDriver", ["yes", "no"], false, true),
         "travelStartTime" => requireJobTagDateTime($_POST, "travelStartTime"),
         "workStartTime"   => requireJobTagDateTime($_POST, "workStartTime"),
         "hadLunch"        => requireEnum($_POST, "hadLunch", ["yes", "no"], false, true),
@@ -74,9 +77,15 @@ try {
         "workPerformed"   => requireField($_POST, "workPerformed", 0, 99999, false),
         "additionalInfo"  => requireField($_POST, "additionalInfo", 0, 99999, false),
         "coords"          => requireJobTagCoords($_POST),
+        "jobTagStatus"    => requireJobTagStatus($_POST),
         "updaterId"       => $userId,
         "updatedAt"       => date("Y-m-d H:i:s"),
     ];
+    foreach (["isPreDriver", "isPostDriver", "hasPreTrailer", "hasPostTrailer"] as $field) {
+        if (array_key_exists($field, $_POST)) {
+            $data[$field] = requireEnum($_POST, $field, ["yes", "no"], false, true);
+        }
+    }
     $signatures = [
         "techSign" => optionalJobTagSignature($_POST, ["techSign", "technicianSignature"]),
         "clientSign" => optionalJobTagSignature($_POST, ["clientSign", "clientSupervisorSignature", "clientSignature"]),

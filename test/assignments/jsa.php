@@ -19,7 +19,7 @@ $jsaFormValues = jsaDecodeContent($_POST["formValues"] ?? null);
 $assignmentId = trim((string)($_POST["assignmentId"] ?? $_POST["AssignmentId"] ?? $_POST["id"] ?? $jsaFormValues["assignmentId"] ?? ""));
 $action = trim((string)($_POST["action"] ?? $jsaFormValues["action"] ?? ""));
 $forSave = filter_var($_POST["forSave"] ?? $jsaFormValues["forSave"] ?? false, FILTER_VALIDATE_BOOLEAN);
-
+error_log($forSave);
 $jsaScalarKeys = [
     "assignmentId", "formId", "openDateTime", "loc", "loc2", "loc3", "loc4",
     "check1", "sel1", "sel2", "sel3", "additionalPPE", "notes", "memberName", "submitDate",
@@ -94,7 +94,7 @@ function jsaUpdateContent(int|string $assignmentId, array $content, bool $forSav
         WHERE `id` = ?;",
         [
             json_encode($content),
-            $forSave ? "saved" : "submitted",
+            $forSave ? "Saved" : "Submitted",
             $forSave ? $now : null,
             $forSave ? null : $now,
             $userId,
@@ -183,7 +183,7 @@ try{
     $content["workId"] = $workId;
     $content["savedAt"] = $now;
     $content["savedBy"] = $userId;
-    $content["status"] = $forSave ? "saved" : "submitted";
+    $content["status"] = $forSave ? "Saved" : "Submitted";
     jsaUpdateContent($assignmentId, $content, $forSave, $now);
 
     if(!empty($content["jobSafetyAnalysisInternalSigns"])){
@@ -200,7 +200,7 @@ try{
                 );
                 $internalContent = jsaDecodeContent($internalAssignment["jsaContent"] ?? null);
                 $internalContent["jobSafetyAnalysisSign"] = $internalSign["data"] ?? [];
-                $internalContent["status"] = $forSave ? "saved" : "submitted";
+                $internalContent["status"] = $forSave ? "Saved" : "Submitted";
                 $internalContent["savedAt"] = $now;
                 $internalContent["savedBy"] = $userId;
                 jsaUpdateContent($internalAssignmentId, $internalContent, $forSave, $now);
@@ -249,7 +249,7 @@ try{
         "jobSafetyAnalysisContent" => $content,
         "jsaSaveTime" => $forSave ? $now : null,
         "jsaSubmitTime" => $forSave ? null : $now,
-        "status" => $forSave ? "saved" : "submitted",
+        "status" => $forSave ? "Saved" : "Submitted",
         "jsaFileId" => $jsaFileId,
         "jsaPdfUrl" => $jsaFileId ? getObjectUrl($privateBucket, $jsaFileId, "jsa_$assignmentId.pdf") : "",
     ]);

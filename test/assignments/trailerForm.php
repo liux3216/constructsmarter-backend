@@ -7,14 +7,14 @@ try{
     $id = requireInt($_POST, "id", 1, null, true);
     $preOrPost = requireEnum($_POST, "preOrPost", ["pre", "post"], true, true);
     $map = ["pre" => "Pre", "post" => "Post"];
-    $key = "is".$map[$preOrPost]."Driver";
-    $isDriver = requireEnum($_POST, "isDriver", ["yes", "no"], true, true);
-    $dataKey = $preOrPost."VehicleData";
+    $key = "has".$map[$preOrPost]."Trailer";
+    $hasTrailer = requireEnum($_POST, "hasTrailer", ["yes", "no"], true, true);
+    $dataKey = $preOrPost."TrailerData";
     $data = null;
     $vehicleId = null;
-    if($isDriver === "yes"){
-        $data = requireField($_POST, "vehicleData");
-        $vehicleId = requireInt($_POST, "vehicleId", 0, null, false);
+    if($hasTrailer === "yes"){
+        $data = requireField($_POST, "trailerData");
+        $vehicleId = requireInt($_POST, "trailerId", 0, null, false);
     }
     $assignment = $db->one(
         "SELECT `id` FROM `assignments` WHERE `id` = ?;",
@@ -26,9 +26,9 @@ try{
         jsonResponse(404, ["msg" => "The assignment is not found."]);
     }
     $sqlData = [
-        $key => $isDriver, 
+        $key => $hasTrailer, 
         $dataKey => $data, 
-        "{$preOrPost}TruckId" => $vehicleId
+        "{$preOrPost}TrailerId" => $vehicleId
     ];
     $setClause = implode(", ", array_map(fn($column) => "`$column` = :$column", array_keys($sqlData)));
     $sqlData["id"] = $id;
