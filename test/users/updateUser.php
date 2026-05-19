@@ -53,7 +53,7 @@ try {
         "allOffice"        => requireEnum($_POST, "allOffice",     ["edit", "view", "no"], true) ?? "no",
         "outside"          => requireEnum($_POST, "outside",       ["locator", "standby", "qew", "runner", "no"], true) ?? "no",
         "outsideStatus"    => requireEnum($_POST, "outsideStatus", ["edit", "view", "no"], true) ?? "no",
-        // metrics => requireEnum($_POST, "outsideStatus", ["all", "yes", "no"], true) ?? "no",
+                "metrics"          => requireEnum($_POST, "metrics",       ["all", "yes", "no"], true) ?? "no",
         "newspaper"        => requireEnum($_POST, "newspaper",     ["edit", "view", "no"], true) ?? "no",
         // community => requireEnum($_POST, "outsideStatus", ["editAll", "edit", "view", "no"], true) ?? "no",
         // training => requireEnum($_POST, "outsideStatus", ["edit", "view", "no"], true) ?? "no",

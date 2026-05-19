@@ -55,19 +55,30 @@ $userId = $result['data']->userId;
 $userName = $result['data']->userName;
 $email = $result['data']->email;
 $version = $result['data']->version;
-//------------------------------------------
-$versions = json_decode(file_get_contents("/opt/bitnami/apache/htdocs/test/appVersion.json"));
-$latestVersion = $versions[count($versions) - 1];
-if($version && $latestVersion->version !== $version){
-    http_response_code(409);
-    exit(json_encode(["msg" => "App updated. Please refresh (or log out and log back in)."]));
-}
+//connect to DB
 $db = new DB(
     $sqlInfo["hostname"], 
     $sqlInfo["username"], 
     $sqlInfo["password"], 
     $sqlInfo["database"]
 );
+//------------------------------------------
+$versions = $db->one("SELECT `jsonValue` FROM `entities` WHERE `entityKey` = ?", ["appversion"], __FILE__, __LINE__);
+if(!$versions){
+    http_response_code(404);
+    exit(json_encode([
+        "title" => "Error",
+        "msg" => "Internal Error."
+    ]));
+    error_log(basename(__FILE__)." ".__LINE__." No row with `entityKey` = \"appversion\" in table `entities`.");
+}
+if($versions["jsonValue"]) $appVersions = json_decode($versions["jsonValue"], true);
+$latestVersion = $appVersions[count($appVersions) - 1];
+//------------------------------------------
+if($version && $latestVersion->version !== $version){
+    http_response_code(409);
+    exit(json_encode(["msg" => "App updated. Please refresh (or log out and log back in)."]));
+}
 $publicBucket = "constructsmarterpublic";
 $privateBucket = "constructsmarter";
 /* continue */

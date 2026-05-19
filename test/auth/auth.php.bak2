@@ -118,7 +118,7 @@ if($quitDate && $quitDate < date("Y-m-d")){
     ]));
 }
 $publicBucket = "constructsmarterpublic";
-$privateBucket = "constructsmarter";
+ = "constructsmarter";
 //-----------------------
 if($profileId) $user["profileUrl"] = "https://$publicBucket.s3.us-west-1.amazonaws.com/$profileId";
 //-----------------------
