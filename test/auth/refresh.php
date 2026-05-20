@@ -77,7 +77,7 @@ if(!$versions){
 if($versions["jsonValue"]) $appVersions = json_decode($versions["jsonValue"], true);
 $latestVersion = $appVersions[count($appVersions) - 1];
 //------------------------------------------
-if($version && $latestVersion->version !== $version){
+if($version && $latestVersion["version"] !== $version){
     http_response_code(409);
     exit(json_encode(["msg" => "App updated. Please refresh (or log out and log back in)."]));
 }

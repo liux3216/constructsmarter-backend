@@ -77,7 +77,6 @@ if(!$user){
 }
 
 if($user["fav"]) $user["fav"] = json_decode($user["fav"], true);
-
 $existingVerificationCode = $user["verificationCode"];
 if($existingVerificationCode !== null){
     http_response_code(403);
@@ -165,16 +164,16 @@ if($currentNewspaperId && $currentNewspaperId !== $popId){
 // update version
 if(
     $latestVersion && 
-    $latestVersion->version && 
-    $existingVersion !== $latestVersion->version
+    $latestVersion["version"] && 
+    $existingVersion !== $latestVersion["version"]
 ){
     $db->exec(
         "UPDATE `users` 
         SET `version` = ? 
-        WHERE `id` = ?;", [$latestVersion->version, $userId], __FILE__, __LINE__
+        WHERE `id` = ?;", [$latestVersion["version"], $userId], __FILE__, __LINE__
     );
-    $res->user["version"] = $latestVersion->version;
-    $res->user["versionMessage"] = $latestVersion->message;
+    $res->user["version"] = $latestVersion["version"];
+    $res->user["versionMessage"] = $latestVersion["message"];
     $res->update = "yes";
 }
 //-----------------------
@@ -183,7 +182,7 @@ $token = $jwt->generateToken(
     $userId, 
     $inputEmail, 
     $userName, 
-    $latestVersion->version, 
+    $latestVersion["version"], 
     3600
 );
 /*
