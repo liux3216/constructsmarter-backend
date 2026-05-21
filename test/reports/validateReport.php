@@ -1,7 +1,7 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 
-$id = trim((string)($_POST["id"] ?? $_POST["reportHashKey"] ?? ""));
+$id = trim((string)($_POST["id"] ?? ""));
 $validateReason = trim((string)($_POST["validateReason"] ?? ""));
 
 if ($id === "" || $validateReason === "") {

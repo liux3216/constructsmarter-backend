@@ -40,7 +40,7 @@ try {
         "address"          => requireField($_POST, "address", 1, 255),
         "background"       => requireField($_POST, "background"), 
         "projects"         => requireEnum($_POST, "projects",      ["edit", "view", "no"], true) ?? "no",
-        "workLogs"         => requireEnum($_POST, "workLogs",      ["yes", "no"], true) ?? "no",
+        "assignments"      => requireEnum($_POST, "assignments",   ["yes", "no"], true) ?? "no",
         "purchases"        => requireEnum($_POST, "purchases",     ["approver", "paid", "edit", "view", "no"], true) ?? "no",
         "perDiem"          => requireEnum($_POST, "perDiem",       ["editAll", "edit", "view", "no"], true) ?? "no",
         "reports"          => requireEnum($_POST, "reports",       ["editAll", "edit", "view", "no"], true) ?? "no",
@@ -58,7 +58,7 @@ try {
         // community => requireEnum($_POST, "outsideStatus", ["editAll", "edit", "view", "no"], true) ?? "no",
         // training => requireEnum($_POST, "outsideStatus", ["edit", "view", "no"], true) ?? "no",
         // workOut => requireEnum($_POST, "outsideStatus", ["yes", "no"], true) ?? "no",
-        // workLogNotification => requireEnum($_POST, "outsideStatus", ["yes", "no"], true) ?? "no",
+        // assignmentNotification => requireEnum($_POST, "outsideStatus", ["yes", "no"], true) ?? "no",
         "dispatch"         => requireEnum($_POST, "dispatch",      ["yes", "no"], false) ?? "no",
         /* userTheme */
 

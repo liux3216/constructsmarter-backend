@@ -2,9 +2,9 @@
 require_once "/opt/bitnami/apache/htdocs/s3.php";
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 
-$reportId = trim((string)($_POST["reportHashKey"] ?? $_POST["id"] ?? ""));
+$reportId = trim((string)($_POST["id"] ?? ""));
 if ($reportId === "") {
-    jsonResponse(422, ["msg" => "reportHashKey is required."]);
+    jsonResponse(422, ["msg" => "Report id is required."]);
 }
 
 $report = $db->one(

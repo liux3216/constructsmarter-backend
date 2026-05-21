@@ -23,10 +23,10 @@ $rows = $db->all(
         CONCAT_WS(' ', `projectManager`.`firstName`, `projectManager`.`middleName`, `projectManager`.`lastName`) AS `projectManager`,
         CAST(`p`.`creatorId` AS CHAR) AS `projectCreatorId`,
         CONCAT_WS(' ', `projectCreator`.`firstName`, `projectCreator`.`middleName`, `projectCreator`.`lastName`) AS `projectCreator`,
-        CAST(`w`.`creatorId` AS CHAR) AS `workInstructionCreatorId`,
-        CONCAT_WS(' ', `workCreator`.`firstName`, `workCreator`.`middleName`, `workCreator`.`lastName`) AS `workInstructionCreator`,
-        CAST(`w`.`updaterId` AS CHAR) AS `workInstructionUpdaterId`,
-        CONCAT_WS(' ', `workUpdater`.`firstName`, `workUpdater`.`middleName`, `workUpdater`.`lastName`) AS `workInstructionUpdater`,
+        CAST(`w`.`creatorId` AS CHAR) AS `workCreatorId`,
+        CONCAT_WS(' ', `workCreator`.`firstName`, `workCreator`.`middleName`, `workCreator`.`lastName`) AS `workCreator`,
+        CAST(`w`.`updaterId` AS CHAR) AS `workUpdaterId`,
+        CONCAT_WS(' ', `workUpdater`.`firstName`, `workUpdater`.`middleName`, `workUpdater`.`lastName`) AS `workUpdater`,
         CAST(`a`.`userId` AS CHAR) AS `userId`,
         CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assignedUser`.`lastName`) AS `userName`
      FROM `works` `w`
@@ -74,10 +74,10 @@ foreach ($rows as $row) {
             "projectManager" => (string)($row["projectManager"] ?? ""),
             "projectCreatorId" => (string)($row["projectCreatorId"] ?? ""),
             "projectCreator" => (string)($row["projectCreator"] ?? ""),
-            "workInstructionCreatorId" => (string)($row["workInstructionCreatorId"] ?? ""),
-            "workInstructionCreator" => (string)($row["workInstructionCreator"] ?? ""),
-            "workInstructionUpdaterId" => (string)($row["workInstructionUpdaterId"] ?? ""),
-            "workInstructionUpdater" => (string)($row["workInstructionUpdater"] ?? ""),
+            "workCreatorId" => (string)($row["workCreatorId"] ?? ""),
+            "workCreator" => (string)($row["workCreator"] ?? ""),
+            "workUpdaterId" => (string)($row["workUpdaterId"] ?? ""),
+            "workUpdater" => (string)($row["workUpdater"] ?? ""),
             "assignments" => [],
         ];
         $seenAssignments[$workId] = [];

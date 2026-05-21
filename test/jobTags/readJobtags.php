@@ -52,13 +52,13 @@ $rows = $db->all(
         COALESCE(`w`.`category`, '') AS `category`,
         COALESCE(`a`.`laborCategory`, '') AS `laborCategory`,
         COALESCE(`u`.`department`, '') AS `department`,
-        COALESCE(`a`.`updatedAt`, `a`.`createdAt`) AS `workLogSubmitTime`,
+        COALESCE(`a`.`updatedAt`, `a`.`createdAt`) AS `assignmentSubmitTime`,
         `w`.`startTime`,
         `w`.`endTime`,
         CASE WHEN `w`.`allDay` = 'yes' THEN true ELSE false END AS `allDay`,
         `a`.`jobTagFileId`,
         CONCAT_WS(' ', `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `laborName`,
-        COALESCE(`a`.`status`, 'Created') AS `workLogStatus`
+        COALESCE(`a`.`status`, 'Created') AS `assignmentStatus`
      FROM `assignments` `a`
      JOIN `works` `w` ON `w`.`id` = `a`.`workId`
      JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`

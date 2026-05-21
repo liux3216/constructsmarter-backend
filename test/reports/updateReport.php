@@ -16,7 +16,7 @@ try {
 
     $action = requireEnum($_POST, "action", ["Add", "Update"], true, true);
     $projectId = requireInt(
-        ["projectId" => $_POST["projectHashKey"] ?? $_POST["projectId"] ?? ""],
+        ["projectId" => $_POST["projectId"] ?? ""],
         "projectId",
         1,
         null,
@@ -76,9 +76,9 @@ try {
         jsonResponse(200, ["id" => $id]);
     }
 
-    $id = trim((string)($_POST["reportHashKey"] ?? $_POST["id"] ?? ""));
+    $id = trim((string)($_POST["id"] ?? ""));
     if ($id === "") {
-        jsonResponse(422, ["msg" => "reportHashKey is required."]);
+        jsonResponse(422, ["msg" => "Report id is required."]);
     }
 
     $exists = $db->one(

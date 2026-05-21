@@ -25,8 +25,7 @@ $rows = $db->all(
     LEFT JOIN `users` `u` ON `a`.`userId` = `u`.`id` 
     WHERE `p`.`id` = ? AND 
     `a`.`laborCategory` <> \"Images\" AND 
-    (`a`.`jobTagStatus` = \"Submitted\" OR `a`.`jobTagStatus
-    ` = \"Approved\") AND
+    (`a`.`jobTagStatus` = \"Submitted\" OR `a`.`jobTagStatus` = \"Approved\") AND
     `p`.`void` <> \"yes\" AND 
     `w`.`void` <> \"yes\" AND 
     `a`.`void` <> \"yes\"

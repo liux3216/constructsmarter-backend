@@ -38,14 +38,14 @@ if (!array_key_exists("void", $_POST)) {
     $params[] = $_POST["void"] === "" ? "no" : $_POST["void"];
 }
 
-if (($reportHashKey = trim((string)($_POST["reportHashKey"] ?? ""))) !== "") {
+if (($id = trim((string)($_POST["id"] ?? ""))) !== "") {
     $where[] = "CAST(`reports`.`id` AS CHAR) = ?";
-    $params[] = $reportHashKey;
+    $params[] = $id;
 }
 
-if (($projectHashKey = trim((string)($_POST["projectHashKey"] ?? $_POST["projectId"] ?? ""))) !== "") {
+if (($projectId = trim((string)($_POST["projectId"] ?? ""))) !== "") {
     $where[] = "CAST(`reports`.`projectId` AS CHAR) = ?";
-    $params[] = $projectHashKey;
+    $params[] = $projectId;
 }
 
 if (($projectName = trim((string)($_POST["projectName"] ?? ""))) !== "") {

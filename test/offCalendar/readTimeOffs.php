@@ -13,7 +13,7 @@ if ($start === "" || $end === "") {
 
 $rows = $db->all(
     "SELECT
-        CAST(`t`.`id` AS CHAR) AS `timeOffHashKey`,
+        CAST(`t`.`id` AS CHAR) AS `timeOffId`,
         `t`.`status`,
         `t`.`data`,
         COALESCE(`u`.`email`, '') AS `requesterEmail`,

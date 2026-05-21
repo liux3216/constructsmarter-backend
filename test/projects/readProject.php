@@ -3,25 +3,13 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 
 header("Content-Type: application/json");
 
-$id = trim((string)($_POST["id"] ?? $_POST["projectHashKey"] ?? ""));
+$id = trim((string)($_POST["id"] ?? ""));
 if ($id === "") {
     http_response_code(400);
     exit(json_encode(["msg" => "Missing project id."]));
 }
-
-/*
- * This version targets the newer id-based tables used by the current
- * organizations / contacts / opportunities modules and aliases the result
- * back into the legacy field names that the projects frontend still expects.
- *
- * If your related tables still use hash-key columns, swap these joins:
- * - organizations.id        -> organizations.organizationHashKey
- * - contacts.id             -> contacts.contactHashKey
- * - opportunities.id        -> opportunities.opportunityHashKey
- */
 $sql = "SELECT
 `p`.`id`,
-`p`.`id` AS `projectHashKey`,
 CONCAT_WS(' - ',
     NULLIF(TRIM(`p`.`projectNumber`), ''),
     NULLIF(TRIM(`org`.`name`), ''),

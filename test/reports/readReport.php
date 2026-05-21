@@ -3,7 +3,7 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 
 header("Content-Type: application/json");
 
-$id = trim((string)($_POST["id"] ?? $_POST["reportHashKey"] ?? ""));
+$id = trim((string)($_POST["id"] ?? ""));
 if ($id === "") {
     http_response_code(400);
     exit(json_encode(["error" => "Invalid schema. `id` is required."]));

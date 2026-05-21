@@ -16,10 +16,10 @@ $likeFields = [
 ];
 $equalFields = [
     "region", "department",
-    "projects", "workLogs", "purchases", "PerDiem", "reports", "forms",
+    "projects", "assignments", "purchases", "PerDiem", "reports", "forms",
     "personel", "fleets", "calendar", "timeOffs", "office", "allOffice",
     "outside", "outsideStatus", "metrics", "newspaper", "community",
-    "training", "workOut", "workLogNotification", "dispatch",
+    "training", "workOut", "assignmentNotification", "dispatch",
 ];
 $betweenDateFields = ["birthDay", "hireDate", "quitDate"];
 if (!array_key_exists("void", $_POST)) $search->equals("void", "no");

@@ -7,9 +7,9 @@ try {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
     }
 
-    $reportId = trim((string)($_POST["reportHashKey"] ?? $_POST["id"] ?? ""));
+    $reportId = trim((string)($_POST["id"] ?? $_POST["id"] ?? ""));
     if ($reportId === "") {
-        jsonResponse(422, ["msg" => "reportHashKey is required."]);
+        jsonResponse(422, ["msg" => "Report id is required."]);
     }
 
     $fileName = requireField($_POST, "fileName", 1, 255, true);

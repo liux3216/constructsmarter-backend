@@ -20,10 +20,10 @@ $likeFields = [
 ];
 $equalFields = [
     "region", "department",
-    "projects", "workLogs", "purchases", "PerDiem", "reports", "forms",
+    "projects", "assignments", "purchases", "PerDiem", "reports", "forms",
     "personel", "fleets", "calendar", "timeOffs", "office", "allOffice",
     "outside", "outsideStatus", "metrics", "newspaper", "community",
-    "training", "workOut", "workLogNotification", "dispatch",
+    "training", "workOut", "assignmentNotification", "dispatch",
 ];
 $betweenDateFields = ["birthDay", "hireDate", "quitDate"];
 if (!array_key_exists("void", $_POST)) $search->equals("void", "no");
@@ -70,7 +70,7 @@ $COLUMN_MAP = [
     "updaterId"           => ["sql" => "CONCAT_WS(' ', `u2`.`firstName`, `u2`.`middleName`, `u2`.`lastName`)", "label" => "Updater"],
     "updatedAt"           => ["sql" => "`u`.`updatedAt`",           "label" => "Updated At"],
     "projects"            => ["sql" => "`u`.`projects`",            "label" => "Projects"],
-    "workLogs"            => ["sql" => "`u`.`workLogs`",            "label" => "Work Logs"],
+    "assignments"            => ["sql" => "`u`.`assignments`",            "label" => "Assignments"],
     "purchases"           => ["sql" => "`u`.`purchases`",           "label" => "Purchases"],
     "perDiem"             => ["sql" => "`u`.`PerDiem`",             "label" => "Per Diem"],
     "newspaper"           => ["sql" => "`u`.`newspaper`",           "label" => "Newspaper"],

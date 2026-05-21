@@ -6,9 +6,9 @@ try {
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
     }
 
-    $id = trim((string)($_POST["reportHashKey"] ?? $_POST["id"] ?? ""));
+    $id = trim((string)($_POST["id"] ?? ""));
     if ($id === "") {
-        jsonResponse(422, ["msg" => "reportHashKey is required."]);
+        jsonResponse(422, ["msg" => "Report id is required."]);
     }
 
     $report = $db->one(

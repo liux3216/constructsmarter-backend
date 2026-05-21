@@ -38,7 +38,7 @@ $user = $db->one(
     `phoneNumber`,
     `workPhone`,  
     `projects`, 
-    `workLogs`, 
+    `assignments`, 
     `metrics`, 
     `purchases`, 
     `quitDate`, 
