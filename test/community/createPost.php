@@ -1,20 +1,16 @@
 <?php
-//load dependencies:
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
-//-------------------------------------------------
-$parentId = array_key_exists("parentId", $_POST)?$_POST["parentId"]:NULL;
-$replyTo = array_key_exists("replyTo", $_POST)?$_POST["replyTo"]:NULL;
-$subject = array_key_exists("subject", $_POST)?$_POST["subject"]:NULL;
+$parentId = array_key_exists("parentId", $_POST) ? $_POST["parentId"] : NULL;
+$replyTo = array_key_exists("replyTo", $_POST) ? $_POST["replyTo"] : NULL;
+$subject = array_key_exists("subject", $_POST) ? $_POST["subject"] : NULL;
 $body = $_POST["body"];
-$photos = array_key_exists("photos", $_POST)?$_POST["photos"]:NULL; // !!!!
-$id = md5(rand());
 $db->exec(
-    "INSERT INTO `posts` (`id`, `parentId`, `replyTo`, `subject`, `body`, `creatorId`) VALUES (?, ?, ?, ?, ?, ?);", 
-    [$id, $parentId, $replyTo, $subject, $body, $userId], __FILE__, __LINE__
+    "INSERT INTO `posts` (`parentId`, `replyTo`, `subject`, `body`, `creatorId`) VALUES (?, ?, ?, ?, ?);",
+    [$parentId, $replyTo, $subject, $body, $userId],
+    __FILE__,
+    __LINE__
 );
-//-------------------------------------------------
 if($parentId){
-    // sub post
     $replies = $db->all(
         "SELECT 
         `p`.`id`, 
@@ -33,11 +29,11 @@ if($parentId){
         LEFT JOIN `users` `u2` ON `p`.`replyTo` = `u2`.`id`
         LEFT JOIN `postLikes` `pL` ON `pL`.`postId` = `p`.`id` AND `pL`.`userId` = ?
         WHERE `p`.`parentId` <=> ?
-        ORDER BY `p`.`updatedAt` DESC;", [$userId, $parentId], __FILE__, __LINE__
+        ORDER BY `p`.`updatedAt` DESC;",
+        [$userId, $parentId], __FILE__, __LINE__
     );
     exit(json_encode(["replies" => $replies]));
 }else{
-    // main post
     $posts = $db->all(
         "SELECT 
         `p`.`id`, 

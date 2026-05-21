@@ -10,13 +10,13 @@ try {
     if ($rentalExpireDate !== null && $rentalExpireDate < $rentalStartDate) {
         throw new InvalidArgumentException('Expire date cannot be before start date.');
     }
-    $id = rentalId();
     $db->exec(
-        'INSERT INTO `rental_statuses` (`id`, `equipmentName`, `projectId`, `renterId`, `department`, `rentalStartDate`, `rentalExpireDate`, `status`, `notes`, `creatorId`) VALUES (?, ?, ?, ?, ?, ?, ?, "rented", ?, ?);',
-        [$id, $equipmentName, $projectId, $renterId, $department, $rentalStartDate, $rentalExpireDate, rentalOptionalString('notes'), $userId],
+        'INSERT INTO `rental_statuses` (`equipmentName`, `projectId`, `renterId`, `department`, `rentalStartDate`, `rentalExpireDate`, `status`, `notes`, `creatorId`) VALUES (?, ?, ?, ?, ?, ?, "rented", ?, ?);',
+        [$equipmentName, $projectId, $renterId, $department, $rentalStartDate, $rentalExpireDate, rentalOptionalString('notes'), $userId],
         __FILE__,
         __LINE__
     );
+    $id = (int)($db->one('SELECT LAST_INSERT_ID() AS `id`', [], __FILE__, __LINE__)['id'] ?? 0);
     exit(json_encode(['id' => $id]));
 } catch (InvalidArgumentException $e) {
     rentalResponse(422, ['msg' => $e->getMessage()]);

@@ -3,7 +3,6 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 require_once __DIR__."/helpers.php";
 require_once __DIR__."/purchasePDF.php";
 try{
-    $id = purchaseGenerateId();
     $poNumber = purchaseRequireString("poNumber");
     $poDate = purchaseRequireString("poDate");
     $poType = purchaseEnum("poType", ["pr", "re"], "pr");
@@ -34,15 +33,20 @@ try{
     $receiptFileId = purchaseUploadPdf("receiptFile", "", $poNumber . " receipt.pdf");
     $db->exec(
         "INSERT INTO `purchases` (
-            `id`, `pdfId`, `poNumber`, `poDate`, `poType`, `category`, `projectId`, `requesterId`, `approverId`,
+            `pdfId`, `poNumber`, `poDate`, `poType`, `category`, `projectId`, `requesterId`, `approverId`,
             `department`, `paymentMethod`, `last4`, `billable`, `includedInProposal`, `clientInvoiceNumber`,
             `notes`, `subtotal`, `tax`, `discount`, `total`, `data`, `status`, `paid`, `billed`,
             `submitterId`, `submitTime`, `quoteFileId`, `receiptFileId`, `creatorId`
-        ) VALUES (?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', 'no', 'no', ?, NOW(), ?, ?, ?);",
-        [$id, $poNumber, $poDate, $poType, $category, $projectId, $requesterId, $approverId, $department, $paymentMethod, $last4, $billable, $includedInProposal, $clientInvoiceNumber, $notes, $subtotal, $tax, $discount, $total, $data, $userId, $quoteFileId, $receiptFileId, $userId],
+        ) VALUES ('', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Submitted', 'no', 'no', ?, NOW(), ?, ?, ?);",
+        [$poNumber, $poDate, $poType, $category, $projectId, $requesterId, $approverId, $department, $paymentMethod, $last4, $billable, $includedInProposal, $clientInvoiceNumber, $notes, $subtotal, $tax, $discount, $total, $data, $userId, $quoteFileId, $receiptFileId, $userId],
         __FILE__,
         __LINE__
     );
+    $created = $db->one("SELECT `id` FROM `purchases` WHERE `poNumber` = ? LIMIT 1;", [$poNumber], __FILE__, __LINE__);
+    $id = (int)($created["id"] ?? 0);
+    if(!$id){
+        purchaseJsonResponse(500, ["msg" => "Failed to create purchase."]);
+    }
     $purchase = $db->one(
         "SELECT `p`.*, " . purchaseProjectLabel() . " AS `projectName`,
             CONCAT_WS(' ', `u1`.`firstName`, `u1`.`middleName`, `u1`.`lastName`) AS `requesterName`,
@@ -53,7 +57,7 @@ try{
         __LINE__
     );
     $purchase["data"] = $lines;
-    $pdfId = generatePurchasePdf($id, $poNumber, null, $purchase);
+    $pdfId = generatePurchasePdf((string)$id, $poNumber, null, $purchase);
     $db->exec("UPDATE `purchases` SET `pdfId` = ? WHERE `id` = ?;", [$pdfId, $id], __FILE__, __LINE__);
     exit(json_encode(["id" => $id]));
 }catch(InvalidArgumentException $e){

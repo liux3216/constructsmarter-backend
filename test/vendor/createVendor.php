@@ -4,9 +4,7 @@ try{
     if($_SERVER["REQUEST_METHOD"] !== "POST"){
         jsonResponse(405, ["msg" => "Method Not Allowed"]);
     }
-    $id = md5(uniqid((string)mt_rand(), true));
     $data = [
-        "id" => $id,
         "vendorName" => requireField($_POST, "vendorName", 1, 150),
         "website" => requireWebsite($_POST, "website", 0, 255),
         "phoneNumber" => requirePhone334($_POST, "phoneNumber"),
@@ -26,6 +24,7 @@ try{
     $sql = "INSERT INTO `vendors` ($fields) VALUES ($values);";
     $db->begin();
     $db->exec($sql, $data, __FILE__, __LINE__);
+    $id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
     $db->commit();
     jsonResponse(201, ["id" => $id]);
 }catch(InvalidArgumentException $e){
