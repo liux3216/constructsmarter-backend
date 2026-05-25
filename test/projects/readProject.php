@@ -34,6 +34,8 @@ CONCAT_WS(' ', `pm`.`firstName`, `pm`.`middleName`, `pm`.`lastName`) AS `project
 `p`.`nearestMedicalFacility`,
 `p`.`opportunityId`,
 `opp`.`opportunityName`,
+`p`.`proposalId`,
+`prop`.`proposalNumber`,
 `p`.`clientPONumber`,
 `p`.`region`,
 `p`.`billingType`,
@@ -68,6 +70,7 @@ CONCAT_WS(' ', `statusUser`.`firstName`, `statusUser`.`middleName`, `statusUser`
 FROM `projects` `p`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
 LEFT JOIN `opportunities` `opp` ON `opp`.`id` = `p`.`opportunityId`
+LEFT JOIN `proposals` `prop` ON `prop`.`id` = `p`.`proposalId`
 LEFT JOIN `users` `pm` ON `pm`.`id` = `p`.`projectManagerId`
 LEFT JOIN `users` `creatorUser` ON `creatorUser`.`id` = `p`.`creatorId`
 LEFT JOIN `users` `updaterUser` ON `updaterUser`.`id` = `p`.`updaterId`

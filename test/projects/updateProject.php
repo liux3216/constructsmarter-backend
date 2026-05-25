@@ -31,6 +31,7 @@ try {
         "budgets"                 => requireField($_POST, "budgets", 0, 9999, false) ?? "[]",
         "description"             => requireField($_POST, "description", 0, 99999, false) ?? "",
         "opportunityId"           => requireInt($_POST, "opportunityId", null, null, false),
+        "proposalId"              => requireInt($_POST, "proposalId", null, null, false),
         "prevailing"              => (isset($_POST["prevailing"]) && strtolower($_POST["prevailing"]) === "yes") ? "yes" : "no",
         "cpr"                     => (isset($_POST["cpr"]) && strtolower($_POST["cpr"]) === "yes") ? "yes" : "no",
         "dirNumber"               => requireField($_POST, "dirNumber", 0, 150, false) ?? "",

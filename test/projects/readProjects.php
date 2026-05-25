@@ -38,6 +38,7 @@ $joinedLikeFields = [
     "organizationName" => "`organizations`.`name`",
     "projectManager"   => "CONCAT_WS(' ', `u3`.`firstName`, `u3`.`middleName`, `u3`.`lastName`)",
     "opportunityName"  => "`opportunities`.`opportunityName`",
+    "proposalNumber"   => "`proposals`.`proposalNumber`",
     "requestor"        => "CONCAT_WS(' ', `u_req`.`firstName`, `u_req`.`middleName`, `u_req`.`lastName`)",
     "creator"          => "CONCAT_WS(' ', `u1`.`firstName`, `u1`.`middleName`, `u1`.`lastName`)",
     "updater"          => "CONCAT_WS(' ', `u2`.`firstName`, `u2`.`middleName`, `u2`.`lastName`)",
@@ -136,6 +137,7 @@ LEFT JOIN `users` `u1` ON `u1`.`id` = `projects`.`creatorId`
 LEFT JOIN `users` `u2` ON `u2`.`id` = `projects`.`updaterId`
 LEFT JOIN `users` `u3` ON `u3`.`id` = `projects`.`projectManagerId`
 LEFT JOIN `organizations` ON `organizations`.`id` = `projects`.`organizationId`
+LEFT JOIN `proposals` ON `proposals`.`id` = `projects`.`proposalId`
 $whereSql ORDER BY `projects`.`createdAt` DESC LIMIT $limit OFFSET $offset;";
 $projects = $db->all($sql, $params, __FILE__, __LINE__);
 /* ---------- response ---------- */

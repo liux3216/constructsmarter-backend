@@ -1,12 +1,25 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/sendEmail.php";
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+
+function parseCompetencyServiceIds(array $input): array {
+    $values = array_key_exists("competencyServiceIds", $input) ? $input["competencyServiceIds"] : [];
+    if(!is_array($values)) $values = [$values];
+    $serviceIds = [];
+    foreach($values as $value){
+        $serviceId = (int)$value;
+        if($serviceId > 0) $serviceIds[] = $serviceId;
+    }
+    return array_values(array_unique($serviceIds));
+}
+
 try {
     if($_SERVER["REQUEST_METHOD"] !== "POST"){
         jsonResponse(405, ["error" => "Method Not Allowed"]);
     }
     $newUserId      = secureId();
     $verificationCode = secureId();
+    $competencyServiceIds = parseCompetencyServiceIds($_POST);
     $data = [
         "id"               => $newUserId,
         "email"            => strtolower(requireEmail($_POST, "userEmail", true)),
@@ -62,6 +75,18 @@ try {
         "creatorId"        => $userId,
         "userTheme"        => "#333333",
     ];
+    if(count($competencyServiceIds)){
+        $placeholders = implode(", ", array_fill(0, count($competencyServiceIds), "?"));
+        $serviceRows = $db->all(
+            "SELECT `id` FROM `services` WHERE `void` = 'no' AND `id` IN ($placeholders);",
+            $competencyServiceIds,
+            __FILE__,
+            __LINE__
+        );
+        if(count($serviceRows) !== count($competencyServiceIds)){
+            throw new InvalidArgumentException("Invalid competency services.");
+        }
+    }
     $cols    = implode(", ", array_map(fn($c) => "`$c`", array_keys($data)));
     $params  = implode(", ", array_map(fn($c) => ":$c",  array_keys($data)));
     $sql     = "INSERT INTO `users` ($cols) VALUES ($params)";
@@ -80,6 +105,14 @@ try {
                 [$newUserId], __FILE__, __LINE__
             );
         }
+    }
+    foreach($competencyServiceIds as $serviceId){
+        $db->exec(
+            "INSERT INTO `users_competency` (`userId`, `serviceId`) VALUES (?, ?);",
+            [$newUserId, $serviceId],
+            __FILE__,
+            __LINE__
+        );
     }
     $db->commit();
     sendEmail([

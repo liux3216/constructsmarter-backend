@@ -34,6 +34,7 @@ $COLUMN_MAP = [
     "location"                => ["sql" => "`projects`.`location`",                                                                                                                                                              "label" => "Location"],
     "nearestMedicalFacility"  => ["sql" => "`projects`.`nearestMedicalFacility`",                                                                                                                                                "label" => "Nearest Medical Facility"],
     "opportunityName"         => ["sql" => "`opportunities`.`opportunityName`",                                                                                                                                                  "label" => "Opportunity Name"],
+    "proposalNumber"          => ["sql" => "`proposals`.`proposalNumber`",                                                                                                                                                       "label" => "Proposal Number"],
     "contactIds"              => ["sql" => "(SELECT GROUP_CONCAT(CONCAT_WS(' ', `c`.`firstName`, `c`.`middleName`, `c`.`lastName`) SEPARATOR ', ') FROM `projects_contact` `pc` LEFT JOIN `contacts` `c` ON `c`.`id` = `pc`.`contactId` WHERE `pc`.`projectId` = `projects`.`id`)", "label" => "Contacts"],
     "clientPONumber"          => ["sql" => "`projects`.`clientPONumber`",                                                                                                                                                        "label" => "Client PO"],
     "region"                  => ["sql" => "`projects`.`region`",                                                                                                                                                                "label" => "Region"],
@@ -77,6 +78,7 @@ $joinedLikeFields = [
     "organizationName" => "`organizations`.`name`",
     "projectManager"   => "CONCAT_WS(' ', `u3`.`firstName`, `u3`.`middleName`, `u3`.`lastName`)",
     "opportunityName"  => "`opportunities`.`opportunityName`",
+    "proposalNumber"   => "`proposals`.`proposalNumber`",
     "requestor"        => "CONCAT_WS(' ', `u_req`.`firstName`, `u_req`.`middleName`, `u_req`.`lastName`)",
     "creator"          => "CONCAT_WS(' ', `u1`.`firstName`, `u1`.`middleName`, `u1`.`lastName`)",
     "updater"          => "CONCAT_WS(' ', `u2`.`firstName`, `u2`.`middleName`, `u2`.`lastName`)",
@@ -163,6 +165,7 @@ $rows = $db->all(
      LEFT JOIN `users` `u3`       ON `u3`.`id`           = `projects`.`projectManagerId`
      LEFT JOIN `organizations`    ON `organizations`.`id` = `projects`.`organizationId`
      LEFT JOIN `opportunities`    ON `opportunities`.`id` = `projects`.`opportunityId`
+     LEFT JOIN `proposals`        ON `proposals`.`id` = `projects`.`proposalId`
      $whereSql;",
     $params, __FILE__, __LINE__
 );

@@ -1,6 +1,18 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/functions.php";
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+
+function parseCompetencyServiceIds(array $input): array {
+    $values = array_key_exists("competencyServiceIds", $input) ? $input["competencyServiceIds"] : [];
+    if(!is_array($values)) $values = [$values];
+    $serviceIds = [];
+    foreach($values as $value){
+        $serviceId = (int)$value;
+        if($serviceId > 0) $serviceIds[] = $serviceId;
+    }
+    return array_values(array_unique($serviceIds));
+}
+
 try {
     if($_SERVER["REQUEST_METHOD"] !== "POST"){
         jsonResponse(405, ["error" => "Method Not Allowed"]);
@@ -9,6 +21,7 @@ try {
         jsonResponse(409, ["msg" => "Missing user id"]);
     }
     $targetUserId = (string)$_POST["curUserId"];
+    $competencyServiceIds = parseCompetencyServiceIds($_POST);
     $data = [
         "id"               => $targetUserId,
         // "email"            => strtolower(requireEmail($_POST, "userEmail", true)),
@@ -64,6 +77,18 @@ try {
 
         "updaterId"        => $userId,
     ];
+    if(count($competencyServiceIds)){
+        $placeholders = implode(", ", array_fill(0, count($competencyServiceIds), "?"));
+        $serviceRows = $db->all(
+            "SELECT `id` FROM `services` WHERE `void` = 'no' AND `id` IN ($placeholders);",
+            $competencyServiceIds,
+            __FILE__,
+            __LINE__
+        );
+        if(count($serviceRows) !== count($competencyServiceIds)){
+            throw new InvalidArgumentException("Invalid competency services.");
+        }
+    }
     $updateData = $data;
     unset($updateData["id"]);
     $setParts = [];
@@ -100,6 +125,20 @@ try {
         }
     }
     $db->exec($sql, $data, __FILE__, __LINE__);
+    $db->exec(
+        "DELETE FROM `users_competency` WHERE `userId` = ?;",
+        [$targetUserId],
+        __FILE__,
+        __LINE__
+    );
+    foreach($competencyServiceIds as $serviceId){
+        $db->exec(
+            "INSERT INTO `users_competency` (`userId`, `serviceId`) VALUES (?, ?);",
+            [$targetUserId, $serviceId],
+            __FILE__,
+            __LINE__
+        );
+    }
     $db->commit();
     jsonResponse(200, ["id" => $targetUserId]);
 } catch (InvalidArgumentException $e) {

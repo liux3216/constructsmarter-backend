@@ -23,6 +23,10 @@ $sql = "SELECT
 `p`.`organizationId`, 
 `w`.`id`,
 `w`.`projectId`,
+`p`.`proposalId`,
+`prop`.`proposalNumber`,
+`w`.`serviceId`,
+COALESCE(CONCAT_WS(' - ', NULLIF(TRIM(`svc`.`code`), ''), NULLIF(TRIM(`svc`.`name`), '')), `svc`.`name`, '') AS `serviceName`,
 CONCAT_WS(' - ',
     NULLIF(TRIM(`p`.`projectNumber`), ''),
     NULLIF(TRIM(`org`.`name`), ''),
@@ -68,6 +72,8 @@ CONCAT_WS(' ', `updaterById`.`firstName`, `updaterById`.`middleName`, `updaterBy
 
 FROM `works` `w`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
+LEFT JOIN `proposals` `prop` ON `prop`.`id` = `p`.`proposalId`
+LEFT JOIN `services` `svc` ON `svc`.`id` = `w`.`serviceId`
 LEFT JOIN `organizations` `org` ON `org`.`id` = `p`.`organizationId`
 LEFT JOIN `contacts` `c` ON `c`.`id` = `w`.`siteContactId`
 LEFT JOIN `users` `supById` ON `supById`.`id` = `w`.`supervisorId`
@@ -85,6 +91,7 @@ if (!$row) {
 $technicians = $db->all(
     "SELECT
         `a`.`id` AS `assignmentId`,
+        `a`.`id` AS `id`,
         `a`.`userId`,
         CONCAT_WS(' ', `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `userName`,
         `a`.`laborCategory`,

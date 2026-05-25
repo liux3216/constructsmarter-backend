@@ -2,6 +2,7 @@
 require_once "/opt/bitnami/apache/htdocs/s3.php";
 
 define("PURCHASE_FILEINFO_FOLDER_ID", "9f48a8a36463c0f9f6b3d0f97b5e0c11");
+define("PURCHASE_MAX_FILE_BYTES", 8 * 1024 * 1024);
 
 function purchaseJsonResponse(int $status, array $payload){
     http_response_code($status);
@@ -110,8 +111,17 @@ function purchaseSyncFileInfo(string $fileId, string $name, string $mimeType, in
     );
 }
 
+function purchaseResolveExistingFileId(string $fieldName, string $fallback = ""): string {
+    $key = $fieldName . "IdCurrent";
+    if(array_key_exists($key, $_POST)){
+        return trim((string)$_POST[$key]);
+    }
+    return $fallback;
+}
+
 function purchaseUploadPdf(string $fieldName, string $existingKey, string $displayName): string {
     global $privateBucket;
+    $existingKey = purchaseResolveExistingFileId($fieldName, $existingKey);
     if(!array_key_exists($fieldName, $_FILES) || !$_FILES[$fieldName]["tmp_name"]){
         return $existingKey;
     }
@@ -119,15 +129,29 @@ function purchaseUploadPdf(string $fieldName, string $existingKey, string $displ
     if(($file["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK){
         throw new InvalidArgumentException("Failed to upload $fieldName.");
     }
-    $mime = mime_content_type($file["tmp_name"]);
-    if($mime !== "application/pdf"){
+    if(!is_uploaded_file($file["tmp_name"])){
+        throw new InvalidArgumentException("Invalid upload for $fieldName.");
+    }
+    $size = (int)($file["size"] ?? 0);
+    if($size <= 0){
+        throw new InvalidArgumentException("$fieldName is empty.");
+    }
+    if($size > PURCHASE_MAX_FILE_BYTES){
+        throw new InvalidArgumentException("$fieldName exceeds max upload size.");
+    }
+    $mime = strtolower((string)mime_content_type($file["tmp_name"]));
+    $name = strtolower((string)($file["name"] ?? ""));
+    if($mime !== "application/pdf" && $mime !== "application/x-pdf"){
+        throw new InvalidArgumentException("$fieldName must be a PDF.");
+    }
+    if($name !== "" && !str_ends_with($name, ".pdf")){
         throw new InvalidArgumentException("$fieldName must be a PDF.");
     }
     $key = $existingKey !== "" ? $existingKey : purchaseGenerateId();
     if(!uploadFile($privateBucket, $key, $file["tmp_name"])){
         throw new RuntimeException("Failed to upload $fieldName.");
     }
-    purchaseSyncFileInfo($key, $displayName, "application/pdf", (int)filesize($file["tmp_name"]));
+    purchaseSyncFileInfo($key, $displayName, "application/pdf", $size);
     return $key;
 }
 

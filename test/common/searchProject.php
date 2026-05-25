@@ -7,6 +7,7 @@ $rows = $db->all(
 `projects`.`id` AS `value`, 
 CONCAT_WS(\" - \", `projects`.`projectNumber`, `organizations`.`name`, `projects`.`clientProjectNumber`) AS `label`, 
 `projects`.`organizationId`, 
+`projects`.`proposalId`, 
 `projects`.`location`, 
 `projects`.`coords`
 FROM `projects`

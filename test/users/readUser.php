@@ -63,4 +63,14 @@ $user = $db->one(
     FROM `users` `u` LEFT JOIN `fileInfo` `f` ON `u`.`profileId` = `f`.`id` WHERE `u`.`id` = ?;", [$curUserId], __FILE__, __LINE__
 );
 if(!$user) exit("");
+$user["competencyServices"] = $db->all(
+    "SELECT `s`.`id` AS `value`, CONCAT_WS(\" - \", `s`.`code`, `s`.`name`) AS `label`
+    FROM `users_competency` `uc`
+    INNER JOIN `services` `s` ON `s`.`id` = `uc`.`serviceId`
+    WHERE `uc`.`userId` = ? AND `s`.`void` = 'no'
+    ORDER BY `s`.`name` ASC;",
+    [$curUserId],
+    __FILE__,
+    __LINE__
+);
 exit(json_encode($user));

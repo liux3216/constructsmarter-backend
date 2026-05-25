@@ -166,6 +166,7 @@ try {
 
     $data = [
         "projectId"       => requireInt($_POST, "projectId", null, null, true),
+        "serviceId"       => requireInt($_POST, "serviceId", null, null, false),
         "category"        => requireField($_POST, "category", 1, 255, true),
         "subCategory"     => requireField($_POST, "subCategory", 0, 255, false) ?? "",
         "location"        => requireField($_POST, "location", 1, 255, true),
