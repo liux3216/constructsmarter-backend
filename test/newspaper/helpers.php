@@ -1,6 +1,11 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/s3.php";
 
+if(realpath($_SERVER["SCRIPT_FILENAME"] ?? "") === __FILE__){
+    http_response_code(403);
+    exit(json_encode(["msg" => "Forbidden"]));
+}
+
 define("NEWSPAPER_ROOT_ID", "9c0f2b7a1d4e6f8890ab12cd34ef5678");
 define("CURRENT_NEWSPAPER_KEY", "currentNewspaperId");
 
@@ -9,10 +14,14 @@ ensureCurrentNewspaperEntity();
 
 function ensureNewspaperRoot(): void {
     global $db, $userId;
+    if(!is_object($db) || !method_exists($db, "one") || !method_exists($db, "exec")){
+        error_log(__FILE__.": DB bootstrap missing in ensureNewspaperRoot");
+        return;
+    }
     $exists = $db->one("SELECT `id` FROM `fileInfo` WHERE `id` = ?;", [NEWSPAPER_ROOT_ID], __FILE__, __LINE__);
     if($exists) return;
     $db->exec(
-        "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, 'Newspaper', 'folder', 0, NULL, ?, 'uploaded');",
+        "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, Newspaper, folder, 0, NULL, ?, uploaded);",
         [NEWSPAPER_ROOT_ID, $userId],
         __FILE__,
         __LINE__
@@ -21,10 +30,14 @@ function ensureNewspaperRoot(): void {
 
 function ensureCurrentNewspaperEntity(): void {
     global $db, $userId;
+    if(!is_object($db) || !method_exists($db, "one") || !method_exists($db, "exec")){
+        error_log(__FILE__.": DB bootstrap missing in ensureCurrentNewspaperEntity");
+        return;
+    }
     $row = $db->one("SELECT `entityKey` FROM `entities` WHERE `entityKey` = ?;", [CURRENT_NEWSPAPER_KEY], __FILE__, __LINE__);
     if($row) return;
     $db->exec(
-        "INSERT INTO `entities` (`entityKey`, `entityType`, `textValue`, `jsonValue`, `updaterId`) VALUES (?, 'text', '', NULL, ?);",
+        "INSERT INTO `entities` (`entityKey`, `entityType`, `textValue`, `jsonValue`, `updaterId`) VALUES (?, text, , NULL, ?);",
         [CURRENT_NEWSPAPER_KEY, $userId],
         __FILE__,
         __LINE__
@@ -102,10 +115,10 @@ function readNewspaperBody(string $fileId): string {
     global $s3Client, $privateBucket;
     try {
         $result = $s3Client->getObject([
-            'Bucket' => $privateBucket,
-            'Key' => $fileId,
+            Bucket => $privateBucket,
+            Key => $fileId,
         ]);
-        return (string)$result['Body'];
+        return (string)$result[Body];
     } catch (Throwable $e) {
         error_log($e->getMessage());
         return "";

@@ -1,8 +1,6 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 require_once "/opt/bitnami/apache/htdocs/SearchHelper.php";
-//authorization: todo
-// AND (`timeOffs`.`creatorId` = ? OR `timeOffs`.`approverId` = ?)
 /* ---------- params ---------- */
 $start = array_key_exists("createdAtFrom", $_POST) ? $_POST["createdAtFrom"] : "";
 $end = array_key_exists("createdAtTo", $_POST) ? $_POST["createdAtTo"] : "";
@@ -19,7 +17,7 @@ if(!$start || !$end){
 /* ---------- search ---------- */
 $search = new SearchHelper("timeOffs");
 $likeFields         = ["notes", "approverNotes", "voidReason", "validateReason"];
-$equalFields        = ["requesterId", "type", "approverId", "status", "paid", "notifiedBy", "updaterId"];
+$equalFields        = ["requesterId", "type", "approverId", "status", "paid", "notifiedBy", "creatorId", "updaterId"];
 $betweenDateFields  = ["fromDate", "toDate", "notifiedAt", "approvalTime", "createdAt", "updatedAt"];
 if (!array_key_exists("void", $_POST)) $search->equals("void", "no");
 else if ($_POST["void"] !== "all")     $search->equals("void", $_POST["void"]);

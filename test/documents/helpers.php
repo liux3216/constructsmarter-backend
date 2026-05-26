@@ -1,6 +1,11 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/s3.php";
 
+if(realpath($_SERVER["SCRIPT_FILENAME"] ?? "") === __FILE__){
+    http_response_code(403);
+    exit(json_encode(["msg" => "Forbidden"]));
+}
+
 define("DOCUMENTS_ROOT_ID", "c4d9f1f0b13f4d7f8e9a0b1c2d3e4f50");
 define("SAFETY_ROOT_ID", "b3a27e3cc4f5416794e0d46c1af7d2c1");
 
@@ -22,6 +27,10 @@ function documentsJsonResponse(int $status, array $payload): void {
 
 function ensureDocumentRoots(): void {
     global $db, $userId;
+    if(!is_object($db) || !method_exists($db, "one") || !method_exists($db, "exec")){
+        error_log(__FILE__.": DB bootstrap missing in ensureDocumentRoots");
+        return;
+    }
     $roots = [
         DOCUMENTS_ROOT_ID => "Documents",
         SAFETY_ROOT_ID => "Safety",
@@ -30,7 +39,7 @@ function ensureDocumentRoots(): void {
         $exists = $db->one("SELECT `id` FROM `fileInfo` WHERE `id` = ?;", [$id], __FILE__, __LINE__);
         if($exists) continue;
         $db->exec(
-            "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, ?, 'folder', 0, NULL, ?, 'uploaded');",
+            "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, ?, folder, 0, NULL, ?, uploaded);",
             [$id, $name, $userId],
             __FILE__,
             __LINE__
