@@ -1,7 +1,9 @@
 <?php
-if ($_SERVER['REMOTE_ADDR'] !== '127.0.0.1' && $_SERVER['REMOTE_ADDR'] !== '::1') {
-    http_response_code(403);
-    exit('Forbidden');
+if (realpath($_SERVER["SCRIPT_FILENAME"] ?? "") === __FILE__) {
+    if ($_SERVER["REMOTE_ADDR"] !== "127.0.0.1" && $_SERVER["REMOTE_ADDR"] !== "::1") {
+        http_response_code(403);
+        exit("Forbidden");
+    }
 }
 ?>
 <!DOCTYPE html>

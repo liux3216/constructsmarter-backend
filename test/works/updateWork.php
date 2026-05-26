@@ -187,7 +187,7 @@ try {
     ];
 
     if (strtotime($data["endTime"]) < strtotime($data["startTime"])) {
-        jsonResponse(422, ["msg" => "endTime must be after startTime."]);
+        jsonResponse(422, ["msg" => "endTime must be greater than or equal to startTime."]);
     }
 
     $setClause = implode(
