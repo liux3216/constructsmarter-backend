@@ -2,10 +2,10 @@
 //required headers
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-App-Token");
 header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
-header("Access-Control-Expose-Headers: Authorization");
+header("Access-Control-Expose-Headers: Authorization, X-Auth-Token");
 require_once "/opt/bitnami/apache/htdocs/db.php"; // DB
 require_once "/opt/bitnami/apache/htdocs/test/constants.php"; // $allowedOrigins, $sqlInfo
 require_once "/opt/bitnami/apache/htdocs/jwt.php"; // JWTHandler
@@ -185,9 +185,9 @@ $token = $jwt->generateToken(
     $latestVersion["version"], 
     3600
 );
-/*
 header("Authorization: Bearer ".$token);
-*/
+header("X-Auth-Token: Bearer ".$token);
+$res->token = "Bearer ".$token;
 setcookie("jwt", "Bearer ".$token, [
     "expires" => time() + 3600,   // 1 hour
     "path" => "/",                  // cookie valid for whole domain

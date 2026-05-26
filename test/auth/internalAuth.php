@@ -2,9 +2,10 @@
 //required headers
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-App-Token");
 header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
+header("Access-Control-Expose-Headers: Authorization, X-Auth-Token");
 require_once "/opt/bitnami/apache/htdocs/db.php"; // DB
 require_once "/opt/bitnami/apache/htdocs/jwt.php"; // JWTHandler
 require_once "/opt/bitnami/apache/htdocs/test/constants.php"; // $allowedOrigins, $sqlInfo
@@ -20,8 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 date_default_timezone_set('America/Los_Angeles');
 //-------------------------------------------------------------------------------------------
 $jwt = new JWTHandler();
-$token = $jwt->getCookieToken();
-// $token = $jwt->getAuthorizationHeader();
+$token = $jwt->getAppTokenHeader();
+if(!$token) $token = $jwt->getCookieToken();
+if(!$token && array_key_exists("token", $_POST)) $token = preg_replace('/^Bearer\s+/i', "", trim((string)$_POST["token"]));
+if(!$token) $token = $jwt->getBearerToken();
 if(!$token){
     http_response_code(401);
     exit(json_encode(["msg" => "The token is expired or invalid"]));
@@ -42,7 +45,8 @@ if($result['data']->exp <= time() + 5 * 60){
         3600
     );
     // set new JWT
-    // header("Authorization: Bearer ".$newToken);
+    header("Authorization: Bearer ".$newToken);
+    header("X-Auth-Token: Bearer ".$newToken);
     setcookie("jwt", "Bearer ".$newToken, [
         "expires" => time() + 3600,   // 1 hour
         "path" => "/",                  // cookie valid for whole domain

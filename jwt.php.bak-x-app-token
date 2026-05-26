@@ -59,23 +59,6 @@ class JWTHandler {
         }
         return null;
     }
-    public function getAppTokenHeader() {
-        $headers = null;
-        if (isset($_SERVER['HTTP_X_APP_TOKEN'])) {
-            $headers = trim($_SERVER['HTTP_X_APP_TOKEN']);
-        } else if (function_exists('getallheaders')) {
-            $allHeaders = getallheaders();
-            if (isset($allHeaders['X-App-Token'])) {
-                $headers = trim($allHeaders['X-App-Token']);
-            } else if (isset($allHeaders['x-app-token'])) {
-                $headers = trim($allHeaders['x-app-token']);
-            }
-        }
-        if (!empty($headers) && preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
-            return $matches[1];
-        }
-        return null;
-    }
     public function getAuthorizationHeader() {
         $headers = null;
         if (isset($_SERVER['Authorization'])) {
