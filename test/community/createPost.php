@@ -10,6 +10,7 @@ $db->exec(
     __FILE__,
     __LINE__
 );
+$postId = (int)$db->lastInsertId();
 if($parentId){
     $replies = $db->all(
         "SELECT 
@@ -34,19 +35,5 @@ if($parentId){
     );
     exit(json_encode(["replies" => $replies]));
 }else{
-    $posts = $db->all(
-        "SELECT 
-        `p`.`id`, 
-        `p`.`subject`, 
-        `p`.`body`, 
-        `p`.`createdAt`, 
-        `p`.`updatedAt`, 
-        `p`.`creatorId`, 
-        CONCAT_WS(\" \", `u1`.`firstName`, `u1`.`middleName`, `u1`.`lastName`) AS `creatorName`
-        FROM `posts` `p`
-        LEFT JOIN `users` `u1` ON `p`.`creatorId` = `u1`.`id`
-        WHERE `p`.`parentId` IS NULL
-        ORDER BY `p`.`updatedAt` DESC;", [], __FILE__, __LINE__
-    );
-    exit(json_encode($posts));
+    exit(json_encode(["id" => $postId]));
 }

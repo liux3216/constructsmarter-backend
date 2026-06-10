@@ -45,7 +45,7 @@ function generateJobTagPdf(int $assignmentId, ?string $pdfId = null, array $sign
             "UPDATE `fileInfo`
              SET `name` = ?, `type` = ?, `size` = ?, `parentId` = ?, `updaterId` = ?, `updatedAt` = NOW(), `status` = ?
              WHERE `id` = ?;",
-            ["jobTag_$assignmentId", "application/pdf", $size, JOB_TAG_FOLDER_ID, $userId, "uploaded", $pdfId],
+            ["jobTag_$assignmentId.pdf", "application/pdf", $size, JOB_TAG_FOLDER_ID, $userId, "uploaded", $pdfId],
             __FILE__,
             __LINE__
         );
@@ -53,7 +53,7 @@ function generateJobTagPdf(int $assignmentId, ?string $pdfId = null, array $sign
         $db->exec(
             "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`)
              VALUES (?, ?, ?, ?, ?, ?, ?);",
-            [$pdfId, "jobTag_$assignmentId", "application/pdf", $size, JOB_TAG_FOLDER_ID, $userId, "uploaded"],
+            [$pdfId, "jobTag_$assignmentId.pdf", "application/pdf", $size, JOB_TAG_FOLDER_ID, $userId, "uploaded"],
             __FILE__,
             __LINE__
         );

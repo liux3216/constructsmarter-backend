@@ -5,6 +5,35 @@ header("Content-Type: application/json");
 
 $selectedDate = requireDate($_POST, "selectedDate", true);
 
+function demoBayAreaCoords(array $row): string {
+    static $bases = [
+        [37.7749, -122.4194],
+        [37.8044, -122.2711],
+        [37.6879, -122.4702],
+        [37.6688, -122.0808],
+        [37.5483, -121.9886],
+        [37.4852, -122.2364],
+        [37.4419, -122.1430],
+        [37.3382, -121.8863],
+        [37.7741, -122.2241],
+        [37.8715, -122.2730],
+    ];
+
+    $seed = trim((string)($row["workId"] ?? ""));
+    if ($seed === "") $seed = trim((string)($row["projectId"] ?? ""));
+    if ($seed === "") $seed = trim((string)($row["projectNumber"] ?? ""));
+    if ($seed === "") $seed = trim((string)($row["location"] ?? ""));
+    if ($seed === "") $seed = "work";
+
+    $hash = abs(crc32($seed));
+    $base = $bases[$hash % count($bases)];
+    $offsetHash = abs(crc32($seed . "-offset"));
+    $latitudeOffset = (($offsetHash % 11) - 5) * 0.0035;
+    $longitudeOffset = (((int)floor($offsetHash / 11) % 11) - 5) * 0.0035;
+
+    return round($base[0] + $latitudeOffset, 6) . "," . round($base[1] + $longitudeOffset, 6);
+}
+
 $rows = $db->all(
     "SELECT
         CAST(`w`.`id` AS CHAR) AS `workId`,
@@ -64,7 +93,7 @@ foreach ($rows as $row) {
             "projectNumber" => (string)($row["projectNumber"] ?? ""),
             "organizationName" => (string)($row["organizationName"] ?? ""),
             "clientProjectNumber" => (string)($row["clientProjectNumber"] ?? ""),
-            "coords" => (string)($row["coords"] ?? ""),
+            "coords" => trim((string)($row["coords"] ?? "")) !== "" ? trim((string)($row["coords"] ?? "")) : demoBayAreaCoords($row),
             "category" => (string)($row["category"] ?? ""),
             "location" => (string)($row["location"] ?? ""),
             "allDay" => (string)($row["allDay"] ?? "no"),

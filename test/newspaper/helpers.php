@@ -21,8 +21,8 @@ function ensureNewspaperRoot(): void {
     $exists = $db->one("SELECT `id` FROM `fileInfo` WHERE `id` = ?;", [NEWSPAPER_ROOT_ID], __FILE__, __LINE__);
     if($exists) return;
     $db->exec(
-        "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, Newspaper, folder, 0, NULL, ?, uploaded);",
-        [NEWSPAPER_ROOT_ID, $userId],
+        "INSERT INTO `fileInfo` (`id`, `name`, `type`, `size`, `parentId`, `creatorId`, `status`) VALUES (?, ?, ?, 0, NULL, ?, ?);",
+        [NEWSPAPER_ROOT_ID, "Newspaper", "folder", $userId, "uploaded"],
         __FILE__,
         __LINE__
     );
@@ -37,8 +37,8 @@ function ensureCurrentNewspaperEntity(): void {
     $row = $db->one("SELECT `entityKey` FROM `entities` WHERE `entityKey` = ?;", [CURRENT_NEWSPAPER_KEY], __FILE__, __LINE__);
     if($row) return;
     $db->exec(
-        "INSERT INTO `entities` (`entityKey`, `entityType`, `textValue`, `jsonValue`, `updaterId`) VALUES (?, text, , NULL, ?);",
-        [CURRENT_NEWSPAPER_KEY, $userId],
+        "INSERT INTO `entities` (`entityKey`, `entityType`, `textValue`, `jsonValue`, `updaterId`) VALUES (?, ?, ?, NULL, ?);",
+        [CURRENT_NEWSPAPER_KEY, "text", "", $userId],
         __FILE__,
         __LINE__
     );
@@ -115,10 +115,10 @@ function readNewspaperBody(string $fileId): string {
     global $s3Client, $privateBucket;
     try {
         $result = $s3Client->getObject([
-            Bucket => $privateBucket,
-            Key => $fileId,
+            "Bucket" => $privateBucket,
+            "Key" => $fileId,
         ]);
-        return (string)$result[Body];
+        return (string)$result["Body"];
     } catch (Throwable $e) {
         error_log($e->getMessage());
         return "";

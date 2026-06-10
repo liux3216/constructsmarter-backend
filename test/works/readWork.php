@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+require_once "/opt/bitnami/apache/htdocs/test/common/attachment_helpers.php";
 
 header("Content-Type: application/json");
 
@@ -9,16 +9,6 @@ if ($id === "") {
     exit(json_encode(["msg" => "Missing work id."]));
 }
 
-/*
- * This endpoint targets the newer id-based `works` table and aliases the row
- * into the field names expected by the current React `works` module.
- *
- * Current assumptions:
- *   or a user email, so both paths are supported.
- * - The current `works` table does not store `fieldSupervisorName`,
- *   `fieldSupervisorEmail`, or `workFiles`, so empty defaults are returned
- *   for those fields.
- */
 $sql = "SELECT
 `p`.`organizationId`, 
 `w`.`id`,
@@ -64,12 +54,7 @@ CONCAT_WS(' ', `creatorById`.`firstName`, `creatorById`.`middleName`, `creatorBy
 `w`.`updaterId`,
 CONCAT_WS(' ', `updaterById`.`firstName`, `updaterById`.`middleName`, `updaterById`.`lastName`) AS `updaterName`,
 `w`.`updatedAt`,
-
-
-`w`.`folderId`,
-'[]' AS `workFiles`
-
-
+`w`.`folderId`
 FROM `works` `w`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
 LEFT JOIN `proposals` `prop` ON `prop`.`id` = `p`.`proposalId`
@@ -87,6 +72,10 @@ if (!$row) {
     http_response_code(400);
     exit(json_encode(["msg" => "The work is not found."]));
 }
+
+$target = attachmentResolveTarget($db, 'works', (int)$id, $userId);
+$row['folderId'] = $target['folderId'];
+$row['workFiles'] = $target['files'];
 
 $technicians = $db->all(
     "SELECT

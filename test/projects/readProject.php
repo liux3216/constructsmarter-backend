@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+require_once "/opt/bitnami/apache/htdocs/test/projects/file_helpers.php";
 
 header("Content-Type: application/json");
 
@@ -47,6 +47,7 @@ CONCAT_WS(' ', `pm`.`firstName`, `pm`.`middleName`, `pm`.`lastName`) AS `project
 `p`.`budgets`,
 `p`.`profit`, 
 `p`.`description`,
+`p`.`folderId`,
 `p`.`notes`,
 `p`.`accurateTime`,
 `p`.`clientSignatureRequired`,
@@ -78,20 +79,18 @@ LEFT JOIN `users` `statusUser` ON `statusUser`.`id` = `p`.`statusChangerId`
 WHERE `p`.`id` = ?;";
 
 $row = $db->one($sql, [$id], __FILE__, __LINE__);
-
+if(!$row){
+    http_response_code(400);
+    exit(json_encode(["msg" => "The project is not found."]));
+}
 if($row["budgets"] !== null) $row["budgets"] = json_decode($row["budgets"], true);
-
-$contacts = $db->all(
-    "SELECT `contactId` AS `value`, CONCAT_WS(\" \", `contacts`.`firstName`, `contacts`.`middleName`, `contacts`.`lastName`) AS `label`
-    FROM `projects_contact` 
+$row['contacts'] = $db->all(
+    "SELECT `contactId` AS `value`, CONCAT_WS(' ', `contacts`.`firstName`, `contacts`.`middleName`, `contacts`.`lastName`) AS `label`
+    FROM `projects_contact`
     LEFT JOIN `contacts` ON `contacts`.`id` = `projects_contact`.`contactId`
     WHERE `projectId` = ?",
     [$id],
     __FILE__, __LINE__
 );
-$row['contacts'] = $contacts;
-if(!$row){
-    http_response_code(400);
-    exit(json_encode(["msg" => "The project is not found."]));
-}
+$row['projectFiles'] = projectReadFiles($db, trim((string)($row['folderId'] ?? '')));
 exit(json_encode($row));

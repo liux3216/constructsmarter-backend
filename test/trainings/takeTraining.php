@@ -47,7 +47,7 @@ if($uuid){
             `creatorId`
         ) VALUES (
             ?, 
-            \"training\", 
+            \"trainings\", 
             \"text\/plain\", 
             ?, 
             ?, 

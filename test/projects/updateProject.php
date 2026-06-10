@@ -30,6 +30,7 @@ try {
         "materialCost"            => requireInt($_POST, "materialCost", null, null, false),
         "budgets"                 => requireField($_POST, "budgets", 0, 9999, false) ?? "[]",
         "description"             => requireField($_POST, "description", 0, 99999, false) ?? "",
+        "folderId"                => requireField($_POST, "folderId", 0, 32, false) ?? "",
         "opportunityId"           => requireInt($_POST, "opportunityId", null, null, false),
         "proposalId"              => requireInt($_POST, "proposalId", null, null, false),
         "prevailing"              => (isset($_POST["prevailing"]) && strtolower($_POST["prevailing"]) === "yes") ? "yes" : "no",
@@ -43,9 +44,7 @@ try {
     ];
 
     $contactIds = json_decode($_POST["contactIds"] ?? "[]", true);
-    if (!is_array($contactIds)) {
-        $contactIds = array_filter([(int)($_POST["contactIds"] ?? 0)]);
-    }
+    if (!is_array($contactIds)) $contactIds = [];
 
     $setClause = implode(", ", array_map(fn($c) => "`$c` = :$c", array_keys($data)));
     $data["id"] = $id;
@@ -56,7 +55,6 @@ try {
     $db->commit();
 
     jsonResponse(200, ["id" => $id]);
-
 } catch (InvalidArgumentException $e) {
     $db->rollBack();
     jsonResponse(422, ["msg" => $e->getMessage()]);

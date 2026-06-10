@@ -25,6 +25,7 @@ try {
         "fleetNumber"   => requireField($_POST, "fleetNumber", 0, 255, false) ?? "",
         "perDiem"       => requireEnum($_POST, "perDiem", ["yes", "no"], true, true),
         "coords"        => requireAssignmentCoords($_POST),
+        "folderId"      => secureId(),
         "creatorId"     => $userId,
     ];
 

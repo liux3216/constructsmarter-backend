@@ -36,7 +36,7 @@ $rows = $db->all(
      WHERE `a`.`void` = 'no'
        AND `w`.`void` = 'no'
        AND DATE(`w`.`startTime`) >= ?
-       AND DATE(`w`.`endTime`) < ?
+       AND DATE(`w`.`endTime`) <= ?
      ORDER BY `p`.`projectNumber`, `a`.`id`;",
     [
         $weekStart,

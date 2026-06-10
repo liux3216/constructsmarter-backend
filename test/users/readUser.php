@@ -29,6 +29,7 @@ $user = $db->one(
     `lastName`, 
     `middleName`, 
     `newspaper`, 
+    `trainings`,
     `office`, 
     `outside`, 
     `outsideStatus`, 

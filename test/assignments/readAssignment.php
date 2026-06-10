@@ -1,5 +1,5 @@
 <?php
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+require_once "/opt/bitnami/apache/htdocs/test/common/attachment_helpers.php";
 
 header("Content-Type: application/json");
 
@@ -32,6 +32,7 @@ CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assigne
 `a`.`laborCategory`,
 `a`.`fleetNumber`,
 `a`.`perDiem`,
+`a`.`folderId`,
 `a`.`travelStartTime`,
 `a`.`workStartTime`,
 `a`.`hadLunch`,
@@ -54,22 +55,18 @@ CONCAT_WS(' ', `assignedUser`.`firstName`, `assignedUser`.`middleName`, `assigne
 `a`.`preTruckId`,
 `f1`.`truckNumber` AS `preTruckNumber`,
 `a`.`preVehicleData`,
-
 `a`.`isPostDriver`,
 `a`.`postTruckId`,
 `f2`.`truckNumber` AS `postTruckNumber`,
 `a`.`postVehicleData`,
-
 `a`.`hasPreTrailer`,
 `a`.`preTrailerId`,
 `f3`.`truckNumber` AS `preTrailerNumber`,
 `a`.`preTrailerData`,
-
 `a`.`hasPostTrailer`,
 `a`.`postTrailerId`,
 `f4`.`truckNumber` AS `postTrailerNumber`,
 `a`.`postTrailerData`,
-
 CONCAT_WS(' ', `supervisorUser`.`firstName`, `supervisorUser`.`middleName`, `supervisorUser`.`lastName`) AS `supervisorName`,
 `w`.`supervisorId`,
 `w`.`leadId`,
@@ -93,10 +90,8 @@ CONCAT_WS(' ', `creatorUser`.`firstName`, `creatorUser`.`middleName`, `creatorUs
 `a`.`updaterId`,
 CONCAT_WS(' ', `updaterUser`.`firstName`, `updaterUser`.`middleName`, `updaterUser`.`lastName`) AS `updaterName`,
 `a`.`updatedAt`,
-
 `a`.`travelStartTime`, `a`.`workStartTime`, `a`.`hadLunch`, `a`.`workEndTime`, `a`.`travelEndTime`, `a`.`workFinished`, `a`.`workRequired`, `a`.`workPerformed`, `a`.`additionalInfo`, 
 `a`.`jobTagFileId`
-
 FROM `assignments` `a`
 LEFT JOIN `works` `w` ON `w`.`id` = `a`.`workId`
 LEFT JOIN `projects` `p` ON `p`.`id` = `w`.`projectId`
@@ -119,6 +114,10 @@ if (!$row) {
     http_response_code(400);
     exit(json_encode(["msg" => "The assignment is not found."]));
 }
+
+$target = attachmentResolveTarget($db, 'assignments', (int)$id, $userId);
+$row['folderId'] = $target['folderId'];
+$row['assignmentFiles'] = $target['files'];
 
 $row["jobSafetyAnalysisContent"] = [];
 if (!empty($row["jsaContent"])) {

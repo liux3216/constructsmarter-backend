@@ -18,5 +18,8 @@ if(!$row){
     exit(json_encode(["msg" => "The file is not found."]));
 }
 $fileName = $row["name"];
+if(!preg_match("/\\.pdf$/i", $fileName)){
+    $fileName .= ".pdf";
+}
 //-------------------------------------------------
 exit(getObjectUrl($privateBucket, $jobTagFileId, $fileName));

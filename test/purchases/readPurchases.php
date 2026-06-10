@@ -16,9 +16,13 @@ $access = $user["purchases"] ?? "no";
 $search = new SearchHelper("p");
 $search->between("poDate")
     ->between("total")
+    ->between("createdAt", "datetime")
+    ->between("updatedAt", "datetime")
     ->like("poNumber", $_POST["poNumber"] ?? null)
     ->like("notes", $_POST["notes"] ?? null)
     ->like("clientInvoiceNumber", $_POST["clientInvoiceNumber"] ?? null)
+    ->like("voidReason", $_POST["voidReason"] ?? null)
+    ->like("validateReason", $_POST["validateReason"] ?? null)
     ->equals("requesterId", $_POST["requesterId"] ?? null)
     ->equals("projectId", $_POST["projectId"] ?? null)
     ->equals("approverId", $_POST["approverId"] ?? null)

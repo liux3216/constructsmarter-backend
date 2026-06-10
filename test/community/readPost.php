@@ -1,7 +1,5 @@
 <?php
-//load dependencies:
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
-//-------------------------------------------------
+require_once "/opt/bitnami/apache/htdocs/test/common/attachment_helpers.php";
 $id = $_POST["id"];
 $obj = $db->one(
     "SELECT 
@@ -11,6 +9,7 @@ $obj = $db->one(
     `p`.`createdAt`, 
     `p`.`updatedAt`, 
     `p`.`creatorId`, 
+    `p`.`picFolderId`,
     CONCAT_WS(\" \", `u1`.`firstName`, `u1`.`middleName`, `u1`.`lastName`) AS `creatorName`, 
     `p`.`likesCount`, 
     CASE WHEN `pL`.userId IS NULL THEN 0 ELSE 1 END AS liked
@@ -40,5 +39,17 @@ $replies = $db->all(
     WHERE `p`.`parentId` = ?
     ORDER BY `p`.`updatedAt` DESC;", [$userId, $id], __FILE__, __LINE__
 );
+$photos = [];
+$picFolderId = trim((string)($obj['picFolderId'] ?? ''));
+if ($picFolderId !== '') {
+    foreach (attachmentReadFiles($db, $picFolderId) as $file) {
+        $photos[] = [
+            'id' => $file['id'],
+            'name' => $file['name'],
+            'url' => $file['webViewLink'],
+        ];
+    }
+}
+$obj['photos'] = $photos;
 $obj["replies"] = $replies;
 exit(json_encode($obj));

@@ -23,7 +23,7 @@ $equalFields = [
     "projects", "assignments", "purchases", "PerDiem", "reports", "forms",
     "personel", "fleets", "calendar", "timeOffs", "office", "allOffice",
     "outside", "outsideStatus", "metrics", "newspaper", "community",
-    "training", "workOut", "assignmentNotification", "dispatch",
+    "trainings", "workOut", "assignmentNotification", "dispatch",
 ];
 $betweenDateFields = ["birthDay", "hireDate", "quitDate"];
 if (!array_key_exists("void", $_POST)) $search->equals("void", "no");
@@ -83,6 +83,7 @@ $COLUMN_MAP = [
     "allOffice"           => ["sql" => "`u`.`allOffice`",           "label" => "All Office"],
     "outside"             => ["sql" => "`u`.`outside`",             "label" => "Outside"],
     "outsideStatus"       => ["sql" => "`u`.`outsideStatus`",       "label" => "Outside Status"],
+    "trainings"           => ["sql" => "`u`.`trainings`",           "label" => "Trainings"],
     "background"          => ["sql" => "`u`.`background`",          "label" => "Background"],
 ];
 

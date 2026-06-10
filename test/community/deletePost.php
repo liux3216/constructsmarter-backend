@@ -1,14 +1,16 @@
 <?php
-//load dependencies:
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
-//-------------------------------------------------
-// also need to delete pics
+require_once "/opt/bitnami/apache/htdocs/test/common/attachment_helpers.php";
 $id = $_POST["id"];
 $parentId = array_key_exists("parentId", $_POST)?$_POST["parentId"]:NULL;
+if (!$parentId) {
+    $row = $db->one("SELECT `picFolderId` FROM `posts` WHERE `id` = ? LIMIT 1;", [$id], __FILE__, __LINE__);
+    $picFolderId = trim((string)($row['picFolderId'] ?? ''));
+    if ($picFolderId !== '') {
+        attachmentDeleteFolder($db, $picFolderId);
+    }
+}
 $db->exec("DELETE FROM `posts` WHERE `id` = ?;", [$id], __FILE__, __LINE__);
-//-------------------------------------------------
 if($parentId){
-    // sub post
     $replies = $db->all(
         "SELECT 
         `p`.`id`, 
@@ -31,7 +33,6 @@ if($parentId){
     );
     exit(json_encode(["replies" => $replies]));
 }else{
-    // main post
     $posts = $db->all(
         "SELECT 
         `p`.`id`, 

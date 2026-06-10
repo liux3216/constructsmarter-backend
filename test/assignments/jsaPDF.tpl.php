@@ -110,6 +110,64 @@
     </style>
 </head>
 <body>
+<?php
+if(!function_exists("jsaPdfH")){
+    function jsaPdfH(mixed $value): string {
+        if(is_array($value)){
+            $value = implode(", ", array_filter(array_map("strval", $value)));
+        }
+        return htmlspecialchars((string)$value, ENT_QUOTES, "UTF-8");
+    }
+}
+if(!function_exists("jsaPdfDateTime")){
+    function jsaPdfDateTime(?string $value): string {
+        if(!$value){
+            return "";
+        }
+        $time = strtotime($value);
+        return $time ? date("m/d/Y g:i A", $time) : $value;
+    }
+}
+if(!function_exists("jsaPdfYesNo")){
+    function jsaPdfYesNo(?string $value): string {
+        if($value === null || $value === ""){
+            return "";
+        }
+        return strtoupper($value) === "NA" ? "NA" : ucfirst(strtolower($value));
+    }
+}
+if(!function_exists("jsaPdfList")){
+    function jsaPdfList(mixed $value): string {
+        if(!is_array($value)){
+            return jsaPdfH($value);
+        }
+        $items = array_values(array_filter(array_map("strval", $value), fn($item) => $item !== ""));
+        return jsaPdfH(implode(", ", $items));
+    }
+}
+if(!function_exists("jsaPdfOther")){
+    function jsaPdfOther(array $others, string $key): string {
+        $value = $others[$key."Content"] ?? $others[$key] ?? "";
+        return is_string($value) ? $value : "";
+    }
+}
+if(!function_exists("jsaPdfSignatureSrc")){
+    function jsaPdfSignatureSrc(mixed $value): string {
+        if(is_string($value) && str_starts_with($value, "data:image/")){
+            return $value;
+        }
+        if(is_array($value)){
+            foreach($value as $item){
+                $src = jsaPdfSignatureSrc($item);
+                if($src !== ""){
+                    return $src;
+                }
+            }
+        }
+        return "";
+    }
+}
+?>
 <?php $content = $data["content"] ?? []; ?>
 <?php $others = is_array($content["others"] ?? null) ? $content["others"] : []; ?>
     <div class="header">
