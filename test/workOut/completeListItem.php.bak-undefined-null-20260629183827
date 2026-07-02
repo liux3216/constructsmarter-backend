@@ -1,0 +1,39 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listItemId = $_POST["listItemId"] ?? null;
+$sessionId = $_POST["sessionId"] ?? null;
+$setIndex = max(1, (int)($_POST["setIndex"] ?? 1));
+$datePerformed = $_POST["datePerformed"] ?? null;
+if (!$listItemId || !$sessionId || !$datePerformed) exit(json_encode(["error" => "List item, session, and date are required."]));
+$item = $db->one("SELECT * FROM `workOutListItems` WHERE `id` = ? AND `userId` = ?;", [$listItemId, $userId], __FILE__, __LINE__);
+if (!$item) exit(json_encode(["error" => "List item not found."]));
+$plannedSet = $db->one("SELECT * FROM `workOutListItemSets` WHERE `listItemId` = ? AND `userId` = ? AND `setIndex` = ?;", [$listItemId, $userId, $setIndex], __FILE__, __LINE__);
+if (!$plannedSet) exit(json_encode(["error" => "Planned set not found."]));
+$session = $db->one("SELECT * FROM `workOutListSessions` WHERE `id` = ? AND `userId` = ? AND `listId` = ?;", [$sessionId, $userId, $item["listId"]], __FILE__, __LINE__);
+if (!$session) exit(json_encode(["error" => "Playlist session not found."]));
+$existing = $db->one("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ? AND `setIndex` = ?;", [$userId, $sessionId, $listItemId, $setIndex], __FILE__, __LINE__);
+if ($existing && !empty($existing["workOutSetId"])) exit(json_encode($existing));
+$groupCompletion = $db->one("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ? AND `workOutGroupId` IS NOT NULL ORDER BY `id` ASC LIMIT 1;", [$userId, $sessionId, $listItemId], __FILE__, __LINE__);
+$groupId = $groupCompletion["workOutGroupId"] ?? null;
+if (!$groupId) {
+    $db->exec("INSERT INTO `workOutGroups` (`userId`, `notes`, `workOutSettingId`, `datePerformed`) VALUES (?, ?, ?, ?);", [$userId, "Created from playlist", $item["workOutSettingId"], $datePerformed], __FILE__, __LINE__);
+    $groupId = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+}
+function nullableNumber($value) {
+    return $value === "" || $value === null ? null : $value;
+}
+$weight = nullableNumber(array_key_exists("weight", $_POST) ? $_POST["weight"] : $plannedSet["weight"]);
+$repetition = nullableNumber(array_key_exists("repetition", $_POST) ? $_POST["repetition"] : $plannedSet["repetition"]);
+$duration = nullableNumber(array_key_exists("duration", $_POST) ? $_POST["duration"] : $plannedSet["duration"]);
+$calories = nullableNumber(array_key_exists("calories", $_POST) ? $_POST["calories"] : $plannedSet["calories"]);
+$comments = array_key_exists("comments", $_POST) ? $_POST["comments"] : $plannedSet["comments"];
+$db->exec("INSERT INTO `workOutSets` (`userId`, `workOutGroupId`, `repetition`, `weight`, `duration`, `calories`, `comments`) VALUES (?, ?, ?, ?, ?, ?, ?);", [$userId, $groupId, $repetition, $weight, $duration, $calories, $comments], __FILE__, __LINE__);
+$setId = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+if ($existing) {
+    $db->exec("UPDATE `workOutListCompletions` SET `datePerformed` = ?, `workOutGroupId` = ?, `workOutSetId` = ? WHERE `id` = ? AND `userId` = ?;", [$datePerformed, $groupId, $setId, $existing["id"], $userId], __FILE__, __LINE__);
+    $id = (int)$existing["id"];
+} else {
+    $db->exec("INSERT INTO `workOutListCompletions` (`userId`, `sessionId`, `listItemId`, `setIndex`, `datePerformed`, `workOutGroupId`, `workOutSetId`) VALUES (?, ?, ?, ?, ?, ?, ?);", [$userId, $sessionId, $listItemId, $setIndex, $datePerformed, $groupId, $setId], __FILE__, __LINE__);
+    $id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+}
+exit(json_encode(["id" => $id, "sessionId" => $sessionId, "listItemId" => $listItemId, "setIndex" => $setIndex, "datePerformed" => $datePerformed, "workOutGroupId" => $groupId, "workOutSetId" => $setId]));

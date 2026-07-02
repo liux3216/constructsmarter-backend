@@ -11,7 +11,7 @@ $offset = ($page - 1) * $limit;
 /* ---------- search builder ---------- */
 $search = new SearchHelper("leads");
 $likeFields = ["businessPhone", "extension", "fax", "mobile", "background", "overseaAddress", "email", "role", "website", "industry", "voidReason", "validateReason"];
-$equalFields = ["creatorId", "updaterId", "source", "status", "referredBy", "userResponsible1", "userResponsible2"];
+$equalFields = ["creatorId", "updaterId", "source", "status", "referredBy", "userResponsible1", "userResponsible2", "sent"];
 $betweenDateTimeFields = ["createdAt", "updatedAt"];
 $search->equals("organizationId", requireInt($_POST, "organizationId", null, null, false));
 $search->when(
@@ -69,6 +69,7 @@ $leads = $db->all(
     `leads`.`extension`, 
     `leads`.`fax`,
     `leads`.`role`,
+    `leads`.`sent`,
     `leads`.`organizationId`,
     `organizations`.`name` AS `organizationName`
     FROM `leads`

@@ -1,0 +1,28 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+
+function parseTargetAreaIds($value) {
+    if ($value === null || $value === "") return [];
+    $decoded = json_decode((string)$value, true);
+    $items = is_array($decoded) ? $decoded : preg_split('/\s*,\s*/', (string)$value, -1, PREG_SPLIT_NO_EMPTY);
+    return array_values(array_unique(array_filter(array_map(fn($id) => (int)$id, $items), fn($id) => $id > 0)));
+}
+
+function syncTargetAreas($db, $settingId, $targetAreaIds) {
+    $db->exec("DELETE FROM `workOutSettingTargetAreas` WHERE `workOutSettingId` = ?;", [$settingId], __FILE__, __LINE__);
+    foreach ($targetAreaIds as $targetAreaId) {
+        $db->exec(
+            "INSERT IGNORE INTO `workOutSettingTargetAreas` (`workOutSettingId`, `targetAreaId`) VALUES (?, ?);",
+            [$settingId, $targetAreaId], __FILE__, __LINE__
+        );
+    }
+}
+
+$name = $_POST["name"];
+$description = $_POST["description"];
+$mode = $_POST["mode"];
+$targetAreaIds = parseTargetAreaIds($_POST["targetAreaIds"] ?? "");
+$db->exec("INSERT INTO `workOutSettings` (`userId`, `name`, `description`, `mode`) VALUES (?, ?, ?, ?);", [$userId, $name, $description, $mode], __FILE__, __LINE__);
+$id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+syncTargetAreas($db, $id, $targetAreaIds);
+exit((string)$id);

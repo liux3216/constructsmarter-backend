@@ -34,7 +34,8 @@ try {
         "zipCode"          => requireZipCode($_POST, "zipCode"),
         "overseaAddress"   => requireField($_POST, "overseaAddress", 1, 255),
         "background"       => requireField($_POST, "background"),
-        "updaterId"      => $userId
+        "sent"             => 0,
+        "updaterId"        => $userId
     ];
     if (empty($data)) {
         jsonResponse(400, ["msg" => "No fields to update."]);

@@ -1,0 +1,15 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listItemId = $_POST["listItemId"] ?? null;
+$sessionId = $_POST["sessionId"] ?? null;
+if (!$listItemId || !$sessionId) exit(json_encode(["error" => "List item and session are required."]));
+$completion = $db->one("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ?;", [$userId, $sessionId, $listItemId], __FILE__, __LINE__);
+if (!$completion) exit(json_encode(["success" => true]));
+if (!empty($completion["workOutSetId"])) {
+    $db->exec("DELETE FROM `workOutSets` WHERE `id` = ? AND `userId` = ?;", [$completion["workOutSetId"], $userId], __FILE__, __LINE__);
+}
+if (!empty($completion["workOutGroupId"])) {
+    $db->exec("DELETE FROM `workOutGroups` WHERE `id` = ? AND `userId` = ?;", [$completion["workOutGroupId"], $userId], __FILE__, __LINE__);
+}
+$db->exec("DELETE FROM `workOutListCompletions` WHERE `id` = ? AND `userId` = ?;", [$completion["id"], $userId], __FILE__, __LINE__);
+exit(json_encode(["success" => true]));

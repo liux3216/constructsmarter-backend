@@ -1,0 +1,16 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listId = $_POST["listId"];
+$workOutSettingId = $_POST["workOutSettingId"];
+$sortOrder = $_POST["sortOrder"] ?? 0;
+$weight = $_POST["weight"] ?? null;
+$repetition = $_POST["repetition"] ?? null;
+$duration = $_POST["duration"] ?? null;
+$calories = $_POST["calories"] ?? null;
+$comments = $_POST["comments"] ?? null;
+$db->exec(
+    "INSERT INTO `workOutListItems` (`userId`, `listId`, `workOutSettingId`, `sortOrder`, `weight`, `repetition`, `duration`, `calories`, `comments`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+    [$userId, $listId, $workOutSettingId, $sortOrder, $weight, $repetition, $duration, $calories, $comments], __FILE__, __LINE__
+);
+$id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+exit((string)$id);

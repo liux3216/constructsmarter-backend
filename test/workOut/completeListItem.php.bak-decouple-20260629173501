@@ -1,0 +1,18 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listItemId = $_POST["listItemId"];
+$sessionId = $_POST["sessionId"] ?? null;
+$datePerformed = $_POST["datePerformed"];
+$item = $db->one("SELECT * FROM `workOutListItems` WHERE `id` = ? AND `userId` = ?;", [$listItemId, $userId], __FILE__, __LINE__);
+if (!$item) exit(json_encode(["error" => "List item not found."]));
+$session = $sessionId ? $db->one("SELECT * FROM `workOutListSessions` WHERE `id` = ? AND `userId` = ? AND `listId` = ?;", [$sessionId, $userId, $item["listId"]], __FILE__, __LINE__) : null;
+if (!$session) exit(json_encode(["error" => "Playlist session not found."]));
+$existing = $db->one("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ?;", [$userId, $sessionId, $listItemId], __FILE__, __LINE__);
+if ($existing) exit(json_encode($existing));
+$db->exec("INSERT INTO `workOutGroups` (`userId`, `notes`, `workOutSettingId`, `datePerformed`) VALUES (?, ?, ?, ?);", [$userId, "Created from playlist", $item["workOutSettingId"], $datePerformed], __FILE__, __LINE__);
+$groupId = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+$db->exec("INSERT INTO `workOutSets` (`userId`, `workOutGroupId`, `repetition`, `weight`, `duration`, `calories`, `comments`) VALUES (?, ?, ?, ?, ?, ?, ?);", [$userId, $groupId, $item["repetition"], $item["weight"], $item["duration"], $item["calories"], $item["comments"]], __FILE__, __LINE__);
+$setId = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+$db->exec("INSERT INTO `workOutListCompletions` (`userId`, `sessionId`, `listItemId`, `datePerformed`, `workOutGroupId`, `workOutSetId`) VALUES (?, ?, ?, ?, ?, ?);", [$userId, $sessionId, $listItemId, $datePerformed, $groupId, $setId], __FILE__, __LINE__);
+$id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+exit(json_encode(["id" => $id, "sessionId" => $sessionId, "listItemId" => $listItemId, "datePerformed" => $datePerformed, "workOutGroupId" => $groupId, "workOutSetId" => $setId]));

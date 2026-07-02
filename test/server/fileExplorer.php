@@ -28,12 +28,12 @@ function getOuput(string $dir): void {
     ){
         if(is_dir("$dir/$file")){
             $output[] = [
-                "isFolder" => true, 
+                "isFolder" => true,
                 "path" => "$file"
             ];
         }else if(is_file("$dir/$file")){
             $output[] = [
-                "isFolder" => false, 
+                "isFolder" => false,
                 "path" => "$file"
             ];
         }
@@ -81,6 +81,44 @@ function zipFolder(string $source, string $destination): bool {
 
     return $zip->close();
 }
+function buildDownloadPayload(string $fullPath, string $downloadName): array {
+    if(is_dir($fullPath)){
+        $tempFile = tempnam(sys_get_temp_dir(), 'zip');
+        if($tempFile === false || !zipFolder($fullPath, $tempFile)){
+            http_response_code(500);
+            exit(json_encode(["msg" => "Unable to prepare folder download."]));
+        }
+        $bytes = file_get_contents($tempFile);
+        unlink($tempFile);
+        if($bytes === false){
+            http_response_code(500);
+            exit(json_encode(["msg" => "Unable to read folder archive."]));
+        }
+        return [
+            "name" => preg_match('/\.zip$/i', $downloadName) ? basename($downloadName) : (basename($downloadName) . '.zip'),
+            "mimeType" => 'application/zip',
+            "base64" => base64_encode($bytes),
+            "isFolder" => true,
+        ];
+    }
+    if(!is_file($fullPath)){
+        http_response_code(404);
+        exit(json_encode(["msg" => "The file path is not valid."]));
+    }
+    $bytes = file_get_contents($fullPath);
+    if($bytes === false){
+        http_response_code(500);
+        exit(json_encode(["msg" => "Unable to read file content."]));
+    }
+    $mimeType = function_exists('mime_content_type') ? mime_content_type($fullPath) : null;
+    if(!$mimeType) $mimeType = 'application/octet-stream';
+    return [
+        "name" => basename($downloadName),
+        "mimeType" => $mimeType,
+        "base64" => base64_encode($bytes),
+        "isFolder" => false,
+    ];
+}
 if($action === "delete"){
     if(is_dir($filePath)){
         $files = scandir($filePath);
@@ -102,16 +140,12 @@ if($action === "delete"){
 }else if($action === "update"){
     file_put_contents($filePath, $content);
 }else if($action === "createFile"){
-    // check duplicates
     file_put_contents("$filePath/$fileName", "");
 }else if($action === "createFolder"){
-    // check duplicates
     mkdir("$filePath/$fileName", 0755);
 }else if($action === "rename"){
-    // check duplicates
     rename("$filePath/$fileName", "$filePath/$newFileName");
 }else if($action === "copy"){
-    // check duplicates
     copy("$filePath/$fileName", "$filePath/$newFileName");
 }else if($action === "property"){
     if(is_dir($filePath)){
@@ -121,39 +155,21 @@ if($action === "delete"){
     }
     exit("size: $fileSize bytes.\nlast modified: ".date("F d Y H:i:s.", filemtime($filePath)));
 }else if($action === "move"){
-    // check duplicates
     if(!is_dir($newPath)){
         http_response_code(404);
         exit(json_encode(["msg" => "The new path is not valid."]));
     }
     rename("$filePath/$fileName", "$newPath/$fileName");
 }else if($action === "upload"){
-    // check duplicates
-    // size limit
     $files = $_FILES["files"];
-    //-------------------------------------------------
     if($files["name"][0] != null){
         for($i = 0; $i < count($files["name"]); $i++){
             move_uploaded_file($files['tmp_name'][$i], "$filePath/".basename($files["name"][$i]));
         }
     }
 }else if($action === "download"){
-    // ##
     if(file_exists("$filePath/$fileName")){
         if(is_dir("$filePath/$fileName")){
-            // $files = scandir("$filePath/$fileName");
-            // if($files === false){
-            //     http_response_code(404);
-            //     error_log(basename(__FILE__)." ".__LINE__." ".$userId." The file path is not valid.");
-            //     exit(json_encode(["msg" => "The file path is not valid."]));
-            // }
-            // $numFiles = count(array_filter($files, function(string $file): bool {
-            //     return !in_array($file, [".", "..", ".git"]);
-            // }));
-            // if($numFiles === 0){
-            //     http_response_code(409);
-            //     exit(json_encode(["msg" => "The folder is empty."]));
-            // }
             $file = tempnam("tmp", "zip");
             zipFolder("$filePath/$fileName", $file);
             readfile($file);
@@ -162,19 +178,26 @@ if($action === "delete"){
             readfile("$filePath/$fileName");
         }
     }
+}else if($action === "downloadMobile"){
+    $downloadPath = "$filePath/$fileName";
+    if(!file_exists($downloadPath)){
+        http_response_code(404);
+        exit(json_encode(["msg" => "The file path is not valid."]));
+    }
+    exit(json_encode(buildDownloadPayload($downloadPath, $fileName)));
 }else if($action == "read"){
     $output = [];
     if(is_dir($filePath)){
         getOuput($filePath);
         exit(json_encode([
-            "isFallBack" => $isFallBack, 
-            "type" => "dir", 
+            "isFallBack" => $isFallBack,
+            "type" => "dir",
             "content" => $output
         ]));
     }else if(is_file($filePath)){
         exit(json_encode([
-            "isFallBack" => $isFallBack, 
-		    "type" => "file", 
+            "isFallBack" => $isFallBack,
+            "type" => "file",
             "content" => file_get_contents($filePath)
         ]));
     }

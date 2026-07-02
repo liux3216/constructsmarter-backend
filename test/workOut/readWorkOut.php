@@ -1,11 +1,42 @@
 <?php
-//load dependencies:
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
-//-------------------------------------------------------
+
 $settings = $db->all("SELECT * FROM `workOutSettings` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
-//-------------------------------------------------------
+$targetAreas = $db->all("SELECT `id`, `name`, `sortOrder` FROM `workOutTargetAreas` ORDER BY `sortOrder`, `name`;", [], __FILE__, __LINE__);
+$settingTargetRows = $db->all(
+    "SELECT `j`.`workOutSettingId`, `j`.`percentage`, `a`.`id`, `a`.`name`
+    FROM `workOutSettingTargetAreas` `j`
+    INNER JOIN `workOutTargetAreas` `a` ON `a`.`id` = `j`.`targetAreaId`
+    INNER JOIN `workOutSettings` `s` ON `s`.`id` = `j`.`workOutSettingId`
+    WHERE `s`.`userId` = ?
+    ORDER BY `a`.`sortOrder`, `a`.`name`;",
+    [$userId], __FILE__, __LINE__
+);
+$targetsBySetting = [];
+foreach ($settingTargetRows as $row) {
+    $settingId = (string)$row["workOutSettingId"];
+    if (!array_key_exists($settingId, $targetsBySetting)) {
+        $targetsBySetting[$settingId] = [];
+    }
+    $targetsBySetting[$settingId][] = [
+        "id" => $row["id"],
+        "name" => $row["name"],
+        "percentage" => (string)$row["percentage"],
+    ];
+}
+foreach ($settings as &$setting) {
+    $settingId = (string)$setting["id"];
+    $setting["targetAreas"] = $targetsBySetting[$settingId] ?? [];
+    $setting["targetAreaIds"] = array_map(fn($area) => (string)$area["id"], $setting["targetAreas"]);
+}
+unset($setting);
+
 $groups = $db->all("SELECT * FROM `workOutGroups` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
-//-------------------------------------------------------
 $sets = $db->all("SELECT * FROM `workOutSets` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
-//-------------------------------------------------
-exit(json_encode(["settings" => $settings, "groups" => $groups, "sets" => $sets]));
+$workOutLists = $db->all("SELECT * FROM `workOutLists` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
+$workOutListItems = $db->all("SELECT * FROM `workOutListItems` WHERE `userId` = ? ORDER BY `listId`, `sortOrder`, `createdAt`;", [$userId], __FILE__, __LINE__);
+$workOutListItemSets = $db->all("SELECT * FROM `workOutListItemSets` WHERE `userId` = ? ORDER BY `listItemId`, `setIndex`, `createdAt`;", [$userId], __FILE__, __LINE__);
+$workOutListSessions = $db->all("SELECT * FROM `workOutListSessions` WHERE `userId` = ? ORDER BY `datePerformed` DESC, `createdAt` DESC;", [$userId], __FILE__, __LINE__);
+$workOutListCompletions = $db->all("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? ORDER BY `datePerformed`, `createdAt`;", [$userId], __FILE__, __LINE__);
+
+exit(json_encode(["settings" => $settings, "groups" => $groups, "exercises" => $groups, "sets" => $sets, "targetAreas" => $targetAreas, "workOutLists" => $workOutLists, "workOutSessions" => $workOutLists, "workOutListItems" => $workOutListItems, "workOutSessionExercises" => $workOutListItems, "workOutListItemSets" => $workOutListItemSets, "workOutSessionExerciseSets" => $workOutListItemSets, "workOutListSessions" => $workOutListSessions, "workOutStartedSessions" => $workOutListSessions, "workOutListCompletions" => $workOutListCompletions, "workOutSessionCompletions" => $workOutListCompletions]));

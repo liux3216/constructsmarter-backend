@@ -1,0 +1,15 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listItemId = $_POST["listItemId"] ?? null;
+$sessionId = $_POST["sessionId"] ?? null;
+$datePerformed = $_POST["datePerformed"] ?? null;
+if (!$listItemId || !$sessionId || !$datePerformed) exit(json_encode(["error" => "List item, session, and date are required."]));
+$item = $db->one("SELECT * FROM `workOutListItems` WHERE `id` = ? AND `userId` = ?;", [$listItemId, $userId], __FILE__, __LINE__);
+if (!$item) exit(json_encode(["error" => "List item not found."]));
+$session = $db->one("SELECT * FROM `workOutListSessions` WHERE `id` = ? AND `userId` = ? AND `listId` = ?;", [$sessionId, $userId, $item["listId"]], __FILE__, __LINE__);
+if (!$session) exit(json_encode(["error" => "Playlist session not found."]));
+$existing = $db->one("SELECT * FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ?;", [$userId, $sessionId, $listItemId], __FILE__, __LINE__);
+if ($existing) exit(json_encode($existing));
+$db->exec("INSERT INTO `workOutListCompletions` (`userId`, `sessionId`, `listItemId`, `datePerformed`) VALUES (?, ?, ?, ?);", [$userId, $sessionId, $listItemId, $datePerformed], __FILE__, __LINE__);
+$id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
+exit(json_encode(["id" => $id, "sessionId" => $sessionId, "listItemId" => $listItemId, "datePerformed" => $datePerformed]));

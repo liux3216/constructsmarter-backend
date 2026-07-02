@@ -1,5 +1,6 @@
 <?php
 exit();
+// hello world d
 //required headers:
 header("Access-Control-Allow-Origin: *");
 header("Cache-Control: no-cache, no-store, must-revalidate");

@@ -41,6 +41,11 @@ $contacts = $db->all(
     CONCAT_WS(\" \", `firstName`, `middleName`, `lastName`) AS `name`
 FROM contacts WHERE organizationId = ? AND void = ? ORDER BY createdAt DESC LIMIT 6;", [$id, "no"], __FILE__, __LINE__);
 $row["contacts"] = $contacts;
-$row["projects"] = [];
+$projects = $db->all(
+    "SELECT
+    id,
+    CONCAT_WS(\" - \", `projectNumber`, (SELECT `name` FROM `organizations` WHERE `organizations`.`id` = `projects`.`organizationId`), `clientProjectNumber`) AS `name`
+FROM projects WHERE organizationId = ? AND void = ? ORDER BY createdAt DESC LIMIT 6;", [$id, "no"], __FILE__, __LINE__);
+$row["projects"] = $projects;
 $row["opportunities"] = [];
 exit(json_encode($row));

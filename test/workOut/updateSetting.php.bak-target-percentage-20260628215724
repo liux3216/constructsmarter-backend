@@ -1,0 +1,31 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+
+function parseTargetAreaIds($value) {
+    if ($value === null || $value === "") return [];
+    $decoded = json_decode((string)$value, true);
+    $items = is_array($decoded) ? $decoded : preg_split('/\s*,\s*/', (string)$value, -1, PREG_SPLIT_NO_EMPTY);
+    return array_values(array_unique(array_filter(array_map(fn($id) => (int)$id, $items), fn($id) => $id > 0)));
+}
+
+function syncTargetAreas($db, $settingId, $targetAreaIds) {
+    $db->exec("DELETE FROM `workOutSettingTargetAreas` WHERE `workOutSettingId` = ?;", [$settingId], __FILE__, __LINE__);
+    foreach ($targetAreaIds as $targetAreaId) {
+        $db->exec(
+            "INSERT IGNORE INTO `workOutSettingTargetAreas` (`workOutSettingId`, `targetAreaId`) VALUES (?, ?);",
+            [$settingId, $targetAreaId], __FILE__, __LINE__
+        );
+    }
+}
+
+$name = $_POST["name"];
+$description = $_POST["description"];
+$mode = $_POST["mode"];
+$id = $_POST["id"];
+$targetAreaIds = parseTargetAreaIds($_POST["targetAreaIds"] ?? "");
+$db->exec(
+    "UPDATE `workOutSettings` SET `name` = ?, `description` = ?, `mode` = ? WHERE `id` = ? AND `userId` = ?;",
+    [$name, $description, $mode, $id, $userId], __FILE__, __LINE__
+);
+syncTargetAreas($db, $id, $targetAreaIds);
+exit();

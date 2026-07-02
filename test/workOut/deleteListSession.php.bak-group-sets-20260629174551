@@ -1,0 +1,9 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$id = $_POST["id"] ?? null;
+if (!$id) exit(json_encode(["error" => "Session id is required."]));
+$session = $db->one("SELECT * FROM `workOutListSessions` WHERE `id` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
+if (!$session) exit(json_encode(["error" => "Playlist session not found."]));
+$db->exec("DELETE FROM `workOutListCompletions` WHERE `sessionId` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
+$db->exec("DELETE FROM `workOutListSessions` WHERE `id` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
+exit(json_encode(["success" => true]));

@@ -11,10 +11,6 @@ if ($page < 1) $page = 1;
 if ($limit < 1 || $limit > 100) $limit = 10;
 $offset = ($page - 1) * $limit;
 
-if ($start === "" || $end === "") {
-    http_response_code(400);
-    exit(json_encode(["error" => "Invalid schema. `start` and `end` are required."]));
-}
 
 $where = [];
 $params = [];
@@ -26,16 +22,27 @@ $params = [];
  * fields that do not exist in the current database yet.
  */
 
-// Match reports that overlap the selected inclusive date range.
-$where[] = "`reports`.`endDate` >= ? AND `reports`.`startDate` <= ?";
-$params[] = $start;
-$params[] = $end;
+// Optional top-level range kept for older clients; missing values mean all dates.
+if ($start !== "" && $end !== "") {
+    $where[] = "`reports`.`endDate` >= ? AND `reports`.`startDate` <= ?";
+    $params[] = $start;
+    $params[] = $end;
+} elseif ($start !== "") {
+    $where[] = "`reports`.`endDate` >= ?";
+    $params[] = $start;
+} elseif ($end !== "") {
+    $where[] = "`reports`.`startDate` <= ?";
+    $params[] = $end;
+}
 
 if (!array_key_exists("void", $_POST)) {
     $where[] = "`reports`.`void` = 'no'";
-} elseif ($_POST["void"] !== "All") {
-    $where[] = "`reports`.`void` = ?";
-    $params[] = $_POST["void"] === "" ? "no" : $_POST["void"];
+} else {
+    $void = trim((string)$_POST["void"]);
+    if (strtolower($void) !== "all") {
+        $where[] = "`reports`.`void` = ?";
+        $params[] = $void === "" ? "no" : $void;
+    }
 }
 
 if (($id = trim((string)($_POST["id"] ?? ""))) !== "") {

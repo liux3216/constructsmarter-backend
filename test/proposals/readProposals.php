@@ -8,9 +8,6 @@ $page = max(1, (int)($_POST["page"] ?? 1));
 $limit = (int)($_POST["limit"] ?? 10);
 if($limit < 1 || $limit > 100) $limit = 10;
 $offset = ($page - 1) * $limit;
-if($start === "" || $end === ""){
-    proposalJsonResponse(400, ["msg" => "Invalid date range."]);
-}
 $search = new SearchHelper("p");
 $search->between("proposalDate")
     ->between("total")

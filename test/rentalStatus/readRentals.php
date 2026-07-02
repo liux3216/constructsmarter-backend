@@ -7,6 +7,10 @@ $offset = ($page - 1) * $limit;
 $status = trim((string)($_POST['status'] ?? 'all'));
 $startFrom = trim((string)($_POST['rentalStartDateFrom'] ?? ''));
 $startTo = trim((string)($_POST['rentalStartDateTo'] ?? ''));
+if ($startFrom === '' && $startTo === '') {
+    $startFrom = date('Y-m-01');
+    $startTo = date('Y-m-d');
+}
 $where = ['`r`.`void` = "no"'];
 $params = [];
 if (in_array($status, ['rented', 'returned'], true)) {

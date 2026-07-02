@@ -1,0 +1,7 @@
+<?php
+require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+$listItemId = $_POST["listItemId"] ?? null;
+$sessionId = $_POST["sessionId"] ?? null;
+if (!$listItemId || !$sessionId) exit(json_encode(["error" => "List item and session are required."]));
+$db->exec("DELETE FROM `workOutListCompletions` WHERE `userId` = ? AND `sessionId` = ? AND `listItemId` = ?;", [$userId, $sessionId, $listItemId], __FILE__, __LINE__);
+exit(json_encode(["success" => true]));

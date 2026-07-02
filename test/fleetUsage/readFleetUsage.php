@@ -24,6 +24,23 @@ function parseWeekRange(string $week): array {
     return [$start, $end];
 }
 
+function buildTrendRange(string $mode, string $month, string $start): array {
+    if ($mode === "Month" && preg_match('/^\d{4}-\d{2}$/', $month)) {
+        $anchor = DateTime::createFromFormat("Y-m-d", $month . "-01");
+    } else {
+        $anchor = DateTime::createFromFormat("Y-m-d", $start);
+    }
+    if (!$anchor) {
+        $anchor = new DateTime("first day of this month");
+    }
+    $anchor->modify("first day of this month");
+    $trendEnd = $anchor->format("Y-m-t");
+    $trendStartDate = clone $anchor;
+    $trendStartDate->modify("-11 months");
+    $trendStart = $trendStartDate->format("Y-m-01");
+    return [$trendStart, $trendEnd];
+}
+
 function normalizeFleetNumbers($value): array {
     if (!is_array($value)) return [];
     $result = [];
@@ -38,6 +55,7 @@ $mode = ($_POST["mode"] ?? "Month") === "Week" ? "Week" : "Month";
 $month = trim((string)($_POST["month"] ?? date("Y-m")));
 $week = trim((string)($_POST["week"] ?? ""));
 [$start, $end] = $mode === "Week" ? parseWeekRange($week) : parseMonthRange($month);
+[$trendStart, $trendEnd] = buildTrendRange($mode, $month, $start);
 $selectedFleetNumbers = normalizeFleetNumbers($_POST["fleetNumber"] ?? []);
 $selectedTrendFleetNumbers = normalizeFleetNumbers($_POST["trendFleetNumber"] ?? []);
 
@@ -155,9 +173,10 @@ if ($selectedTrendFleetNumbers) {
             COUNT(DISTINCT CONCAT(`assignmentId`, ':', `fleetNumber`)) AS `count`
         FROM ($usageBaseSql) `u`
         WHERE `fleetNumber` IN ($placeholders)
+            AND DATE(`startTime`) BETWEEN ? AND ?
         GROUP BY `fleetNumber`, DATE_FORMAT(`startTime`, '%Y-%m')
         ORDER BY `month` ASC;",
-        $selectedTrendFleetNumbers,
+        array_merge($selectedTrendFleetNumbers, [$trendStart, $trendEnd]),
         __FILE__,
         __LINE__
     );
@@ -191,6 +210,8 @@ $output = [
     "week" => $week,
     "start" => $start,
     "end" => $end,
+    "trendStart" => $trendStart,
+    "trendEnd" => $trendEnd,
     "fleetOptions" => array_map(fn($fleetNumber) => ["label" => $fleetNumber, "value" => $fleetNumber], $fleetNumbers),
     "selectedFleetNumbers" => $selectedFleetNumbers,
     "selectedTrendFleetNumbers" => $selectedTrendFleetNumbers,

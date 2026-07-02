@@ -44,6 +44,7 @@ try{
         "zipCode"          => requireZipCode($_POST, "zipCode"),
         "overseaAddress"   => requireField($_POST, "overseaAddress", 1, 255),
         "background"       => requireField($_POST, "background"),
+        "sent"             => 0,
         "creatorId"        => $userId,
     ];
     $columns = array_keys($data);
