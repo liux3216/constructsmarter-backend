@@ -70,6 +70,7 @@ $leads = $db->all(
     `leads`.`fax`,
     `leads`.`role`,
     `leads`.`sent`,
+    `leads`.`realSent`,
     `leads`.`organizationId`,
     `organizations`.`name` AS `organizationName`
     FROM `leads`

@@ -13,6 +13,17 @@ function parseCompetencyServiceIds(array $input): array {
     return array_values(array_unique($serviceIds));
 }
 
+function optionalCoordsPoint(array $src, string $key): ?string {
+    if(!array_key_exists($key, $src) || trim((string)$src[$key]) === ""){
+        return null;
+    }
+    $coords = array_map("trim", explode(",", (string)$src[$key]));
+    if(count($coords) < 2 || !is_numeric($coords[0]) || !is_numeric($coords[1])){
+        throw new InvalidArgumentException("Invalid coordinates");
+    }
+    return "POINT(" . (float)$coords[0] . " " . (float)$coords[1] . ")";
+}
+
 try {
     if($_SERVER["REQUEST_METHOD"] !== "POST"){
         jsonResponse(405, ["error" => "Method Not Allowed"]);
@@ -92,6 +103,10 @@ try {
     $sql     = "INSERT INTO `users` ($cols) VALUES ($params)";
     $db->begin();
     $db->exec($sql, $data, __FILE__, __LINE__);
+    $coordsPoint = optionalCoordsPoint($_POST, "coords");
+    if($coordsPoint !== null){
+        $db->exec("UPDATE `users` SET `coord` = ST_GeomFromText(?) WHERE `id` = ?;", [$coordsPoint, $newUserId], __FILE__, __LINE__);
+    }
     if($data["office"] === "yes" || $data["outside"] === "runner"){
         $db->exec(
             "INSERT INTO `timeCard` (`userId`) VALUES (?);",

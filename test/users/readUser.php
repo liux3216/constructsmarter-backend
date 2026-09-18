@@ -55,6 +55,7 @@ $user = $db->one(
     `workPhone`,
     `version`,
     `address`,
+    IF(`u`.`coord` IS NULL, NULL, CONCAT(ST_X(`u`.`coord`), ',', ST_Y(`u`.`coord`))) AS `coords`,
     `verificationCode`, 
     `void`, 
     `voidReason`,

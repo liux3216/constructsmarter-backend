@@ -5,7 +5,7 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 //------------------------------------------------------------
 if(!in_array($email, $testerEmails)) exit();
 //------------------------------------------------------------
-$action = $_POST["action"];
+$action = $_POST["action"] ?? "";
 $needle = array_key_exists("needle", $_POST)?$_POST["needle"]:NULL;
 $sql = array_key_exists("sql", $_POST)?$_POST["sql"]:NULL;
 $selection = array_key_exists("selection", $_POST)?$_POST["selection"]:NULL;
@@ -20,6 +20,17 @@ $existingPrimaryKey =  array_key_exists("primaryKey", $_POST)?$_POST["primaryKey
 //------------------------------------------------------------
 $valueSQL = addslashes($value);
 $primaryKeyValueSQL = addslashes($primaryKeyValue);
+function normalizeSelection(?string $selection, ?string $table): string {
+    if($selection === null || trim($selection) === "") return "*";
+    if($table === "users"){
+        return preg_replace(
+            '/(?<![`\\w])`?userName`?(?![`\\w])/',
+            'CONCAT_WS(" ", `firstName`, `middleName`, `lastName`) AS `userName`',
+            $selection
+        );
+    }
+    return $selection;
+}
 //------------------------------------------------------------
 if($action === "Search In All"){
     $output = [];
@@ -64,6 +75,7 @@ if($action === "Search In All"){
         $totalRows = $row["COUNT(`$existingPrimaryKey`)"];
     }
     //----------------------------
+    $selection = normalizeSelection($selection, $table);
     $rows = $db->all("SELECT $selection FROM `$table` $where $order LIMIT $limit ;", [], __FILE__, __LINE__);
     exit(json_encode([
         "rows" => $rows,

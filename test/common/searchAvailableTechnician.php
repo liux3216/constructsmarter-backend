@@ -15,7 +15,8 @@ $params = [$serviceId, "%{$q}%", $startSql, $workId ?? 0, $workId ?? 0, $startSq
 $rows = $db->all(
     "SELECT DISTINCT
         `u`.`id` AS `value`,
-        CONCAT_WS(' ', `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `label`
+        CONCAT_WS(' ', `u`.`firstName`, `u`.`middleName`, `u`.`lastName`) AS `label`,
+        IF(`u`.`coord` IS NULL, NULL, CONCAT(ST_X(`u`.`coord`), ',', ST_Y(`u`.`coord`))) AS `coords`
     FROM `users` `u`
     INNER JOIN `users_competency` `uc` ON `uc`.`userId` = `u`.`id` AND `uc`.`serviceId` = ?
     WHERE `u`.`void` = 'no'
@@ -31,7 +32,7 @@ $rows = $db->all(
           AND (? = 0 OR `w`.`id` <> ?)
           AND NOT (`w`.`endTime` < ? OR `w`.`startTime` > ?)
       )
-    ORDER BY `label` ASC
+    ORDER BY `u`.`coord` IS NULL, ST_X(`u`.`coord`), ST_Y(`u`.`coord`), `label` ASC
     LIMIT 20;",
     $params,
     __FILE__,

@@ -34,6 +34,7 @@ $sql = "SELECT
 `leads`.`voidReason`,
 `leads`.`validateReason`, 
 `leads`.`sent`, 
+`leads`.`realSent`, 
 `leads`.`creatorId`, 
 `leads`.`createdAt`, 
 `leads`.`updaterId`, 

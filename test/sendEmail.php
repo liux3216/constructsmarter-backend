@@ -130,8 +130,8 @@ function sendEmail(array $params): void {
             }
         }
     }catch(phpmailerException $e){
-        error_log($path." ".$selfEmail." ".json_encode($e));
+        error_log($path." ".$selfEmail." ".$to." ".json_encode($e));
     }catch(Exception $e){
-        error_log($path." ".$selfEmail." ".$mail->ErrorInfo);
+        error_log($path." ".$selfEmail." ".$to." ".$mail->ErrorInfo);
     }
 }

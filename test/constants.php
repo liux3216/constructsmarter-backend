@@ -1,7 +1,7 @@
 <?php
 require_once "/home/bitnami/constants.php";
 // $mainIP
-// $mainRoot 
+// $mainRoot openaiApiKey
 // $sqlInfo
 // $emailHost
 // $appEmail

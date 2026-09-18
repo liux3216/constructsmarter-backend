@@ -5,13 +5,13 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 //------------------------------------------------------------
 if(!in_array($email, $testerEmails)) exit();
 //----------------------------------------------------
-$needle = $_POST["needle"];
-$autocomplete = $_POST["autocomplete"];
-$caseSensitive = $_POST["caseSensitive"];
-$wholeWord = $_POST["wholeWord"];
-$rootPath = $_POST["rootPath"];
+$needle = $_POST["needle"] ?? "";
+$autocomplete = $_POST["autocomplete"] ?? "false";
+$caseSensitive = $_POST["caseSensitive"] ?? "false";
+$wholeWord = $_POST["wholeWord"] ?? "false";
+$rootPath = $_POST["rootPath"] ?? "";
 //----------------------------------------------------
-if($rootPath !== "" && !in_array($rootPath, $roots)){
+if($rootPath !== "" && !in_array($rootPath, $roots, true)){
     http_response_code(404);
     exit(json_encode(["msg" => "The root path is not valid."]));
 }
@@ -19,11 +19,13 @@ $output = [];
 function getOuput(string $dir): void {
     global $output, $needle, $autocomplete, $caseSensitive, $wholeWord;
     $str = "1234567890_abcdefghijklmnopqrstuvwxyz";
-    foreach(scandir($dir) as $file){
+    $files = scandir($dir);
+    if($files === false) return;
+    foreach($files as $file){
         if(!in_array($file, [".", "..", ".git"]) && is_dir("$dir/$file")){
             getOuput("$dir/$file");
         }
-        if(substr($file, -4) === ".php"){
+        if(substr($file, -4) === ".php" && is_readable("$dir/$file")){
             $haystack = file_get_contents("$dir/$file");
             if($autocomplete === "true"){
                 unset($matches);

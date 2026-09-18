@@ -3,15 +3,17 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 $q = requireField($_POST, "q", 0, "max", true);
 if (!$q) exit(json_encode([]));
 $rows = $db->all(
-    "SELECT `id` AS `value`, `name` AS `label`
+    "SELECT `id` AS `value`, `name` AS `label`, `coords`
     FROM (
         SELECT
             `id`,
-            CONCAT_WS(\" \", `firstName`, `middleName`, `lastName`) AS `name`
+            CONCAT_WS(\" \", `firstName`, `middleName`, `lastName`) AS `name`,
+            IF(`coord` IS NULL, NULL, CONCAT(ST_X(`coord`), ',', ST_Y(`coord`))) AS `coords`,
+            `coord`
         FROM `users`
     ) `t`
     WHERE `name` LIKE ?
-    ORDER BY `name`
+    ORDER BY `coord` IS NULL, ST_X(`coord`), ST_Y(`coord`), `name`
     LIMIT 20;",
     ["%{$q}%"]
 );

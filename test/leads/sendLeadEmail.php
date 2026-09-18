@@ -71,13 +71,22 @@ try {
     $search->equals("sent", 0);
     $search->raw("`leads`.`email` IS NOT NULL AND `leads`.`email` <> ''", []);
 
+    $batchLimit = array_key_exists("limit", $_POST) ? (int)$_POST["limit"] : 100;
+    if ($batchLimit < 1 || $batchLimit > 100) {
+        $batchLimit = 100;
+    }
+    $sleepSeconds = array_key_exists("sleepSeconds", $_POST) ? (int)$_POST["sleepSeconds"] : 10;
+    if ($sleepSeconds < 0 || $sleepSeconds > 10) {
+        $sleepSeconds = 10;
+    }
+
     $whereSql = $search->getWhereSql();
     $params = $search->getParams();
     $leads = $db->all(
         "SELECT `id`, `email`, CONCAT_WS(' ', `firstName`, `middleName`, `lastName`) AS `name`
          FROM `leads`
          $whereSql
-         ORDER BY `createdAt` DESC;",
+         ORDER BY `createdAt` DESC LIMIT $batchLimit;",
         $params,
         __FILE__, __LINE__
     );
@@ -85,6 +94,8 @@ try {
     $sentCount = 0;
     $skippedInvalidEmail = 0;
     $failed = [];
+    $halted = false;
+    $haltReason = "";
 
     foreach ($leads as $lead) {
         $leadEmail = trim((string)($lead["email"] ?? ""));
@@ -103,11 +114,22 @@ try {
                 "body" => leadEmailBody(trim((string)$lead["name"])),
                 "noBodyTemplate" => true,
             ]);
+            // sendEmail throws on PHPMailer failure; only mark sent after a successful SMTP send.
             $db->exec("UPDATE `leads` SET `sent` = 1, `updaterId` = ? WHERE `id` = ?;", [$userId, $lead["id"]], __FILE__, __LINE__);
             $sentCount++;
+            if ($sleepSeconds > 0 && $sentCount < count($leads)) {
+                sleep($sleepSeconds);
+            }
         } catch (Throwable $e) {
+            $message = $e->getMessage();
             error_log($e);
             $failed[] = $lead["id"];
+
+            if (preg_match('/Could not authenticate|SMTP Error|data not accepted|DATA END command failed|Error sending message for delivery/i', $message)) {
+                $halted = true;
+                $haltReason = $message;
+                break;
+            }
         }
     }
 
@@ -116,6 +138,8 @@ try {
         "skippedInvalidEmail" => $skippedInvalidEmail,
         "failed" => count($failed),
         "failedIds" => $failed,
+        "halted" => $halted,
+        "haltReason" => $haltReason,
     ]);
 } catch (InvalidArgumentException $e) {
     jsonResponse(422, ["msg" => $e->getMessage()]);
