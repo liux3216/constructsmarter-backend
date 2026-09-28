@@ -31,7 +31,7 @@ foreach ($settings as &$setting) {
 }
 unset($setting);
 
-$groups = $db->all("SELECT * FROM `workOutGroups` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
+$groups = $db->all("SELECT * FROM `workOutGroups` WHERE `userId` = ? ORDER BY `datePerformed`, `sortOrder` IS NULL, `sortOrder`, `createdAt`, `id`;", [$userId], __FILE__, __LINE__);
 $sets = $db->all("SELECT * FROM `workOutSets` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
 $workOutLists = $db->all("SELECT * FROM `workOutLists` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
 $workOutListItems = $db->all("SELECT * FROM `workOutListItems` WHERE `userId` = ? ORDER BY `listId`, `sortOrder`, `createdAt`;", [$userId], __FILE__, __LINE__);
