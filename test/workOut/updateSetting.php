@@ -1,6 +1,7 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 require_once __DIR__ . "/settingProfile.php";
+require_once __DIR__ . "/settingLink.php";
 
 function normalizePercentage($value) {
     if ($value === null || $value === "") return 100;
@@ -47,19 +48,20 @@ $name = $_POST["name"];
 $description = $_POST["description"];
 $mode = $_POST["mode"];
 $id = $_POST["id"];
-$existing = $db->one("SELECT `profileId` FROM `workOutSettings` WHERE `id` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
+$existing = $db->one("SELECT `profileId`, `linkUrl` FROM `workOutSettings` WHERE `id` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
 if (!$existing) {
     http_response_code(404);
     exit(json_encode(["msg" => "Exercise not found."]));
 }
+$linkUrl = array_key_exists("linkUrl", $_POST) ? validateSettingLink($_POST["linkUrl"]) : $existing["linkUrl"];
 $profileId = array_key_exists("profileId", $_POST)
     ? validateSettingProfile($db, $userId, $_POST["profileId"])
     : $existing["profileId"];
 $targetAreas = parseTargetAreas($_POST["targetAreas"] ?? "", $_POST["targetAreaIds"] ?? "");
 $db->begin();
 $db->exec(
-    "UPDATE `workOutSettings` SET `name` = ?, `description` = ?, `mode` = ?, `profileId` = ? WHERE `id` = ? AND `userId` = ?;",
-    [$name, $description, $mode, $profileId, $id, $userId], __FILE__, __LINE__
+    "UPDATE `workOutSettings` SET `name` = ?, `description` = ?, `mode` = ?, `profileId` = ?, `linkUrl` = ? WHERE `id` = ? AND `userId` = ?;",
+    [$name, $description, $mode, $profileId, $linkUrl, $id, $userId], __FILE__, __LINE__
 );
 syncTargetAreas($db, $id, $targetAreas);
 $db->commit();

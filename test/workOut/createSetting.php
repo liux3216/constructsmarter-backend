@@ -1,6 +1,7 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 require_once __DIR__ . "/settingProfile.php";
+require_once __DIR__ . "/settingLink.php";
 
 function normalizePercentage($value) {
     if ($value === null || $value === "") return 100;
@@ -47,9 +48,10 @@ $name = $_POST["name"];
 $description = $_POST["description"];
 $mode = $_POST["mode"];
 $targetAreas = parseTargetAreas($_POST["targetAreas"] ?? "", $_POST["targetAreaIds"] ?? "");
+$linkUrl = validateSettingLink($_POST["linkUrl"] ?? "");
 $profileId = validateSettingProfile($db, $userId, $_POST["profileId"] ?? "");
 $db->begin();
-$db->exec("INSERT INTO `workOutSettings` (`userId`, `name`, `description`, `mode`, `profileId`) VALUES (?, ?, ?, ?, ?);", [$userId, $name, $description, $mode, $profileId], __FILE__, __LINE__);
+$db->exec("INSERT INTO `workOutSettings` (`userId`, `name`, `description`, `mode`, `profileId`, `linkUrl`) VALUES (?, ?, ?, ?, ?, ?);", [$userId, $name, $description, $mode, $profileId, $linkUrl], __FILE__, __LINE__);
 $id = (int)($db->one("SELECT LAST_INSERT_ID() AS `id`", [], __FILE__, __LINE__)["id"] ?? 0);
 syncTargetAreas($db, $id, $targetAreas);
 $db->commit();
