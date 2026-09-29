@@ -1,6 +1,6 @@
 <?php
 
-function saveGroupOrder($db, string $userId, $date, $encodedIds): void
+function saveGroupOrder($db, string $userId, $date, $encodedIds, $moveId = null, $destination = null): void
 {
     if (!is_string($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         throw new InvalidArgumentException("A valid workout date is required.");
@@ -23,15 +23,30 @@ function saveGroupOrder($db, string $userId, $date, $encodedIds): void
         throw new InvalidArgumentException("Exercise IDs must be unique.");
     }
 
+    $isMove = $moveId !== null || $destination !== null;
+    if ($isMove && ((!is_string($moveId) && !is_int($moveId)) || !preg_match('/^[1-9]\d*$/', (string)$moveId) || !in_array($destination, ['top', 'bottom'], true))) {
+        throw new InvalidArgumentException("A valid exercise ID and top/bottom destination are required.");
+    }
+
     $db->begin();
     try {
         $rows = $db->all(
-            "SELECT `id` FROM `workOutGroups` WHERE `userId` = ? AND `datePerformed` = ? ORDER BY `id` FOR UPDATE",
+            "SELECT `id` FROM `workOutGroups` WHERE `userId` = ? AND `datePerformed` = ? ORDER BY `sortOrder` IS NULL, `sortOrder`, `createdAt`, `id` FOR UPDATE",
             [$userId, $date], __FILE__, __LINE__
         );
         $currentIds = array_map(fn($row) => (string)$row['id'], $rows);
         if (count($ids) !== count($currentIds) || array_diff($ids, $currentIds)) {
             throw new RuntimeException("The workout log has changed. Refresh it before reordering.");
+        }
+        if ($isMove) {
+            // Move against the order the client saw; reject stale or foreign selections.
+            if ($ids !== $currentIds || !in_array((string)$moveId, $currentIds, true)) {
+                throw new RuntimeException("The workout log has changed. Refresh it before reordering.");
+            }
+            $ids = array_values(array_filter($currentIds, fn($id) => $id !== (string)$moveId));
+            // Clients show the stored order in reverse, so visual top is the last position.
+            if ($destination === 'top') $ids[] = (string)$moveId;
+            else array_unshift($ids, (string)$moveId);
         }
         foreach ($ids as $position => $id) {
             $db->exec(

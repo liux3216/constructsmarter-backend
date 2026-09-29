@@ -3,7 +3,7 @@ require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
 require_once __DIR__ . "/saveGroupOrder.php";
 
 try {
-    saveGroupOrder($db, (string)$userId, $_POST["datePerformed"] ?? null, $_POST["groupIds"] ?? null);
+    saveGroupOrder($db, (string)$userId, $_POST["datePerformed"] ?? null, $_POST["groupIds"] ?? null, $_POST["groupId"] ?? null, $_POST["destination"] ?? null);
     exit(json_encode(["success" => true]));
 } catch (InvalidArgumentException $error) {
     http_response_code(422);
