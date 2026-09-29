@@ -1,5 +1,6 @@
 <?php
 require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
+require_once "/opt/bitnami/apache/htdocs/test/constants.php";
 
 $settings = $db->all("SELECT * FROM `workOutSettings` WHERE `userId` = ? ORDER BY `createdAt`;", [$userId], __FILE__, __LINE__);
 $targetAreas = $db->all("SELECT `id`, `name`, `sortOrder` FROM `workOutTargetAreas` ORDER BY `sortOrder`, `name`;", [], __FILE__, __LINE__);
@@ -26,6 +27,7 @@ foreach ($settingTargetRows as $row) {
 }
 foreach ($settings as &$setting) {
     $settingId = (string)$setting["id"];
+    $setting["profileUrl"] = empty($setting["profileId"]) ? "" : "https://$publicBucket.s3.us-west-1.amazonaws.com/" . rawurlencode($setting["profileId"]);
     $setting["targetAreas"] = $targetsBySetting[$settingId] ?? [];
     $setting["targetAreaIds"] = array_map(fn($area) => (string)$area["id"], $setting["targetAreas"]);
 }
