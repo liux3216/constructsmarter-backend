@@ -1,5 +1,0 @@
-<?php
-require_once "/opt/bitnami/apache/htdocs/test/auth/internalAuth.php";
-$id = $_POST["id"];
-$db->exec("DELETE FROM `workOutLists` WHERE `id` = ? AND `userId` = ?;", [$id, $userId], __FILE__, __LINE__);
-exit();
