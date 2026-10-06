@@ -107,12 +107,14 @@ try {
     if($coordsPoint !== null){
         $db->exec("UPDATE `users` SET `coord` = ST_GeomFromText(?) WHERE `id` = ?;", [$coordsPoint, $newUserId], __FILE__, __LINE__);
     }
+    /*
     if($data["office"] === "yes" || $data["outside"] === "runner"){
         $db->exec(
             "INSERT INTO `timeCard` (`userId`) VALUES (?);",
             [$newUserId], __FILE__, __LINE__
         );
     }
+    */
     if($data["outside"] !== "no" && $data["outside"] !== "runner"){
         foreach(["outsidePOT", "outsideEOT", "outsideDaily"] as $table){
             $db->exec(

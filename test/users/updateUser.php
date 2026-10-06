@@ -109,6 +109,7 @@ try {
     $setSql = implode(", ", $setParts);
     $sql = "UPDATE `users` SET $setSql WHERE `id` = :id";
     $db->begin();
+    /*
     if($data["office"] === "no"){
         $db->exec(
             "DELETE FROM `timeCard` WHERE `userId` = ?;",
@@ -120,6 +121,7 @@ try {
             [$targetUserId], __FILE__, __LINE__
         );
     }
+    */
     if($data["outside"] === "no" || $data["outside"] === "runner"){
         foreach(["outsideML", "outsideSB", "outsideEOT", "outsidePOT", "outsideDaily"] as $table){
             $db->exec(
