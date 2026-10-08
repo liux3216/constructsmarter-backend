@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/nutrients.php';
+function dietFoodLabel(array $food): string {
+    return $food['name'].(empty($food['brandName'])?'':' · '.$food['brandName']);
+}
 function dietFoodPhoto(array $food): array {
     $food['profileUrl'] = empty($food['profileId']) ? '' : 'https://constructsmarterpublic.s3.us-west-1.amazonaws.com/' . rawurlencode($food['profileId']);
     return $food;
@@ -48,7 +52,7 @@ function dietFind($db, string $table, string $userId, int $id, bool $active = fa
 }
 function dietTotals(array $food, float $quantity): array {
     $totals = [];
-    foreach (['calories','protein','carbs','fat'] as $key) $totals[$key] = round((float)$food[$key] * $quantity, 2);
+    foreach (dietNutrientKeys() as $key) $totals[$key] = in_array($key,dietOptionalNutrientKeys(),true) && !isset($food[$key]) ? null : round((float)($food[$key]??0) * $quantity, 2);
     return $totals;
 }
 function dietApi($db, string $userId, array $input) {
@@ -66,10 +70,10 @@ function dietApi($db, string $userId, array $input) {
         $query = dietText($input, 'q', 200, false);
         if ($action === 'search' && $query === '') return [];
         $where = '`userId` = ? AND `deletedAt` IS NULL'; $params = [$userId];
-        if ($query !== '') { $where .= " AND `name` LIKE ? ESCAPE '='"; $params[] = '%' . str_replace(['=','%','_'], ['==','=%','=_'], $query) . '%'; }
+        if ($query !== '') { $where .= " AND (`name` LIKE ? ESCAPE '=' OR `brandName` LIKE ? ESCAPE '=')"; $like = '%' . str_replace(['=','%','_'], ['==','=%','=_'], $query) . '%'; $params[]=$like; $params[]=$like; }
         if ($action === 'search') {
-            $rows = $db->all("SELECT `id`, `name`, `serving` FROM `dietFoods` WHERE $where ORDER BY `name`, `id` LIMIT 50", $params);
-            return array_map(fn($row) => ['value'=>(string)$row['id'], 'label'=>$row['name'], 'meta'=>$row['serving']], $rows);
+            $rows = $db->all("SELECT `id`, `name`, `brandName`, `serving` FROM `dietFoods` WHERE $where ORDER BY `name`, `id` LIMIT 50", $params);
+            return array_map(fn($row) => ['value'=>(string)$row['id'], 'label'=>dietFoodLabel($row), 'meta'=>$row['serving']], $rows);
         }
         $total = (int)$db->one("SELECT COUNT(*) AS total FROM `dietFoods` WHERE $where", $params)['total'];
         $page = dietPage($input, $total); $offset = ($page['page'] - 1) * $page['limit']; $limit = $page['limit'];
@@ -84,8 +88,16 @@ function dietApi($db, string $userId, array $input) {
             if (!preg_match('/\p{L}/u',$unit) || preg_match('/[\r\n]/',$unit)) throw new InvalidArgumentException('Enter a valid serving unit.');
             $serving=rtrim(rtrim(number_format($amount,3,'.',''),'0'),'.').' '.$unit;
         } else $serving = dietText($input,'serving',100);
-        $macros = array_map(fn($key) => dietNumber($input,$key), ['calories','protein','carbs','fat']);
-        if (!empty($input['id'])) dietFind($db,'dietFoods',$userId,dietId($input,'id'),true);
+        $macros = array_map(function($key) use ($input) {
+            if (in_array($key,dietOptionalNutrientKeys(),true) && (!isset($input[$key]) || $input[$key]==='')) return null;
+            if (in_array($key,['sodium','cholesterol'],true) && !array_key_exists($key,$input)) return 0.0;
+            return dietNumber($input,$key);
+        }, dietNutrientKeys());
+        $nutritionSet = implode(', ',array_map(fn($key)=>"`$key`=?",dietNutrientKeys()));
+        $nutritionColumns = implode(',',array_map(fn($key)=>"`$key`",dietNutrientKeys()));
+        $nutritionPlaceholders = implode(',',array_fill(0,count(dietNutrientKeys()),'?'));
+        $old=!empty($input['id']) ? dietFind($db,'dietFoods',$userId,dietId($input,'id'),true) : null;
+        $brandName=array_key_exists('brandName',$input) ? dietText($input,'brandName',200,false) : ($old['brandName']??'');
         $profile = null;
         if (array_key_exists('profileId', $input) && $input['profileId'] !== null && $input['profileId'] !== '') {
             require_once __DIR__ . '/foodProfile.php';
@@ -93,9 +105,9 @@ function dietApi($db, string $userId, array $input) {
         }
         if (!empty($input['id'])) {
             $id = dietId($input,'id'); dietFind($db,'dietFoods',$userId,$id,true);
-            $db->exec('UPDATE `dietFoods` SET `name`=?, `serving`=?, `calories`=?, `protein`=?, `carbs`=?, `fat`=? WHERE `id`=? AND `userId`=?', [$name,$serving,...$macros,$id,$userId]);
+            $db->exec("UPDATE `dietFoods` SET `name`=?, `brandName`=?, `serving`=?, $nutritionSet WHERE `id`=? AND `userId`=?", [$name,$brandName,$serving,...$macros,$id,$userId]);
         } else {
-            $db->exec('INSERT INTO `dietFoods` (`userId`,`name`,`serving`,`calories`,`protein`,`carbs`,`fat`) VALUES (?,?,?,?,?,?,?)', [$userId,$name,$serving,...$macros]);
+            $db->exec("INSERT INTO `dietFoods` (`userId`,`name`,`brandName`,`serving`,$nutritionColumns) VALUES (?,?,?,?,$nutritionPlaceholders)", [$userId,$name,$brandName,$serving,...$macros]);
             $id = (int)$db->lastInsertId();
         }
         if (array_key_exists('profileId', $input)) $db->exec('UPDATE `dietFoods` SET `profileId`=? WHERE `id`=? AND `userId`=?', [$profile,$id,$userId]);
@@ -108,7 +120,12 @@ function dietApi($db, string $userId, array $input) {
     }
     if ($action === 'day') {
         $date = dietDate($input);
-        $summary = $db->one('SELECT COUNT(*) AS total, COALESCE(SUM(ROUND(`calories`*`quantity`,2)),0) AS calories, COALESCE(SUM(ROUND(`protein`*`quantity`,2)),0) AS protein, COALESCE(SUM(ROUND(`carbs`*`quantity`,2)),0) AS carbs, COALESCE(SUM(ROUND(`fat`*`quantity`,2)),0) AS fat FROM `dietEntries` WHERE `userId`=? AND `datePerformed`=?',[$userId,$date]);
+        $sums = implode(', ',array_map(function($key) {
+            $sum = "COALESCE(SUM(ROUND(`$key`*`quantity`,2)),0)";
+            if (in_array($key,dietOptionalNutrientKeys(),true)) $sum = "CASE WHEN COUNT(*)=COUNT(`$key`) THEN $sum ELSE NULL END";
+            return "$sum AS `$key`";
+        },dietNutrientKeys()));
+        $summary = $db->one("SELECT COUNT(*) AS total, $sums FROM `dietEntries` WHERE `userId`=? AND `datePerformed`=?",[$userId,$date]);
         $page = dietPage($input,(int)$summary['total']); $offset = ($page['page']-1)*$page['limit']; $limit=$page['limit'];
         $page['items']=$db->all("SELECT e.*, f.serving AS currentServing FROM dietEntries e LEFT JOIN dietFoods f ON f.id=e.foodId AND f.userId=e.userId WHERE e.userId=? AND e.datePerformed=? ORDER BY e.id DESC LIMIT $limit OFFSET $offset",[$userId,$date]);
         foreach ($page['items'] as &$entry) {
@@ -117,7 +134,7 @@ function dietApi($db, string $userId, array $input) {
             unset($entry['currentServing']);
         }
         unset($entry);
-        $page['totals']=array_map('floatval', array_intersect_key($summary,array_flip(['calories','protein','carbs','fat'])));
+        $page['totals']=array_map(fn($value)=>$value===null?null:(float)$value, array_intersect_key($summary,array_flip(dietNutrientKeys())));
         return $page;
     }
     if ($action === 'saveEntry') {
@@ -130,13 +147,16 @@ function dietApi($db, string $userId, array $input) {
         $food=$same ? $entry : ($dishId ? dietDish($db,$userId,$dishId) : dietFind($db,'dietFoods',$userId,$foodId,true));
         if($dishId && !$same) foreach($food['items'] as $item) if($item['deletedAt']) throw new InvalidArgumentException('Replace removed foods in this dish before logging it.');
         $dishItems=$same ? $entry['dishItems'] : ($dishId ? json_encode($food['items']) : null);
-        foreach(['calories','protein','carbs','fat'] as $key) if((float)$food[$key]>999999999.999) throw new InvalidArgumentException('Dish nutrition exceeds the supported limit. Reduce its food quantities.');
-        $values=[$foodId,$date,$meal,$quantity,$food['name'],$food['serving'],$food['calories'],$food['protein'],$food['carbs'],$food['fat'],$notes,$dishId,$dishItems];
+        foreach(dietNutrientKeys() as $key) if((float)$food[$key]>999999999.999) throw new InvalidArgumentException('Dish nutrition exceeds the supported limit. Reduce its food quantities.');
+        $values=[$foodId,$date,$meal,$quantity,$food['name'],$food['brandName']??'',$food['serving'],...array_map(fn($key)=>$food[$key]??(in_array($key,dietOptionalNutrientKeys(),true)?null:0),dietNutrientKeys()),$notes,$dishId,$dishItems];
+        $nutritionSet = implode(', ',array_map(fn($key)=>"`$key`=?",dietNutrientKeys()));
+        $nutritionColumns = implode(',',array_map(fn($key)=>"`$key`",dietNutrientKeys()));
+        $placeholders = implode(',',array_fill(0,count($values)+1,'?'));
         if ($entry) {
             $id=(int)$entry['id'];
-            $db->exec('UPDATE `dietEntries` SET `foodId`=?, `datePerformed`=?, `meal`=?, `quantity`=?, `name`=?, `serving`=?, `calories`=?, `protein`=?, `carbs`=?, `fat`=?, `notes`=?, `dishId`=?, `dishItems`=? WHERE `id`=? AND `userId`=?',[...$values,$id,$userId]);
+            $db->exec("UPDATE `dietEntries` SET `foodId`=?, `datePerformed`=?, `meal`=?, `quantity`=?, `name`=?, `brandName`=?, `serving`=?, $nutritionSet, `notes`=?, `dishId`=?, `dishItems`=? WHERE `id`=? AND `userId`=?",[...$values,$id,$userId]);
         } else {
-            $db->exec('INSERT INTO `dietEntries` (`foodId`,`datePerformed`,`meal`,`quantity`,`name`,`serving`,`calories`,`protein`,`carbs`,`fat`,`notes`,`dishId`,`dishItems`,`userId`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[...$values,$userId]);
+            $db->exec("INSERT INTO `dietEntries` (`foodId`,`datePerformed`,`meal`,`quantity`,`name`,`brandName`,`serving`,$nutritionColumns,`notes`,`dishId`,`dishItems`,`userId`) VALUES ($placeholders)",[...$values,$userId]);
             $id=(int)$db->lastInsertId();
         }
         return ['id'=>$id,'success'=>true];

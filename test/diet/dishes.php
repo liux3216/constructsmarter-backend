@@ -1,9 +1,11 @@
 <?php
 function dietDish($db, string $userId, int $id, bool $active = true): array {
     $dish = dietFoodPhoto(dietFind($db, 'dietDishes', $userId, $id, $active));
-    $dish['items'] = $db->all('SELECT i.*, f.name, f.serving, f.calories, f.protein, f.carbs, f.fat, f.deletedAt FROM dietDishFoods i JOIN dietFoods f ON f.id=i.foodId AND f.userId=? WHERE i.dishId=? ORDER BY i.id', [$userId,$id]);
+    $nutritionColumns = implode(', ',array_map(fn($key)=>"f.`$key`",dietNutrientKeys()));
+    $dish['items'] = $db->all("SELECT i.*, f.name, f.brandName, f.serving, $nutritionColumns, f.deletedAt FROM dietDishFoods i JOIN dietFoods f ON f.id=i.foodId AND f.userId=? WHERE i.dishId=? ORDER BY i.id", [$userId,$id]);
     $dish['serving'] = '1 dish';
-    foreach (['calories','protein','carbs','fat'] as $key) {
+    foreach (dietNutrientKeys() as $key) {
+        if (in_array($key,dietOptionalNutrientKeys(),true) && count(array_filter($dish['items'],fn($item)=>!isset($item[$key])))>0) {$dish[$key]=null;continue;}
         $dish[$key] = round(array_sum(array_map(fn($item)=>(float)$item[$key]*(float)$item['quantity'], $dish['items'])),3);
     }
     return $dish;
