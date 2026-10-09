@@ -55,6 +55,16 @@ function dietTotals(array $food, float $quantity): array {
     foreach (dietNutrientKeys() as $key) $totals[$key] = in_array($key,dietOptionalNutrientKeys(),true) && !isset($food[$key]) ? null : round((float)($food[$key]??0) * $quantity, 2);
     return $totals;
 }
+function dietNutritionSums(): string {
+    return implode(', ',array_map(function($key) {
+        $sum="COALESCE(SUM(ROUND(`$key`*`quantity`,2)),0)";
+        if (in_array($key,dietOptionalNutrientKeys(),true)) $sum="CASE WHEN COUNT(*)=COUNT(`$key`) THEN $sum ELSE NULL END";
+        return "$sum AS `$key`";
+    },dietNutrientKeys()));
+}
+function dietSummaryTotals(array $summary): array {
+    return array_map(fn($value)=>$value===null?null:(float)$value,array_intersect_key($summary,array_flip(dietNutrientKeys())));
+}
 function dietApi($db, string $userId, array $input) {
     $action = $input['action'] ?? '';
     require_once __DIR__.'/dishes.php';
@@ -118,13 +128,21 @@ function dietApi($db, string $userId, array $input) {
         $db->exec('UPDATE `dietFoods` SET `deletedAt`=CURRENT_TIMESTAMP WHERE `id`=? AND `userId`=?',[$id,$userId]);
         return ['success'=>true];
     }
+    if ($action === 'range') {
+        $start=dietDate(['date'=>$input['startDate']??'']);
+        $end=dietDate(['date'=>$input['endDate']??'']);
+        if ($start>$end) throw new InvalidArgumentException('Start date must be on or before end date.');
+        $sums=dietNutritionSums();
+        $where='`userId`=? AND `datePerformed` BETWEEN ? AND ?';$params=[$userId,$start,$end];
+        $summary=$db->one("SELECT COUNT(DISTINCT `datePerformed`) AS total, COUNT(*) AS entryCount, $sums FROM `dietEntries` WHERE $where",$params);
+        $page=dietPage($input,(int)$summary['total']);$offset=($page['page']-1)*$page['limit'];$limit=$page['limit'];
+        $rows=$db->all("SELECT `datePerformed` AS date, COUNT(*) AS entryCount, $sums FROM `dietEntries` WHERE $where GROUP BY `datePerformed` ORDER BY `datePerformed` DESC LIMIT $limit OFFSET $offset",$params);
+        $page['items']=array_map(fn($row)=>['date'=>$row['date'],'entryCount'=>(int)$row['entryCount'],'totals'=>dietSummaryTotals($row)],$rows);
+        return [...$page,'startDate'=>$start,'endDate'=>$end,'entryCount'=>(int)$summary['entryCount'],'totals'=>dietSummaryTotals($summary)];
+    }
     if ($action === 'day') {
         $date = dietDate($input);
-        $sums = implode(', ',array_map(function($key) {
-            $sum = "COALESCE(SUM(ROUND(`$key`*`quantity`,2)),0)";
-            if (in_array($key,dietOptionalNutrientKeys(),true)) $sum = "CASE WHEN COUNT(*)=COUNT(`$key`) THEN $sum ELSE NULL END";
-            return "$sum AS `$key`";
-        },dietNutrientKeys()));
+        $sums=dietNutritionSums();
         $summary = $db->one("SELECT COUNT(*) AS total, $sums FROM `dietEntries` WHERE `userId`=? AND `datePerformed`=?",[$userId,$date]);
         $page = dietPage($input,(int)$summary['total']); $offset = ($page['page']-1)*$page['limit']; $limit=$page['limit'];
         $page['items']=$db->all("SELECT e.*, f.serving AS currentServing FROM dietEntries e LEFT JOIN dietFoods f ON f.id=e.foodId AND f.userId=e.userId WHERE e.userId=? AND e.datePerformed=? ORDER BY e.id DESC LIMIT $limit OFFSET $offset",[$userId,$date]);
@@ -134,7 +152,7 @@ function dietApi($db, string $userId, array $input) {
             unset($entry['currentServing']);
         }
         unset($entry);
-        $page['totals']=array_map(fn($value)=>$value===null?null:(float)$value, array_intersect_key($summary,array_flip(dietNutrientKeys())));
+        $page['totals']=dietSummaryTotals($summary);
         return $page;
     }
     if ($action === 'saveEntry') {
