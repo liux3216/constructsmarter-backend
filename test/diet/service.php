@@ -69,6 +69,8 @@ function dietApi($db, string $userId, array $input) {
     $action = $input['action'] ?? '';
     require_once __DIR__.'/dishes.php';
     if (in_array($action,['dish','dishes','searchDishes','saveDish','deleteDish'],true)) return dietDishApi($db,$userId,$input);
+    require_once __DIR__.'/sleeps.php';
+    if (in_array($action,['sleeps','sleepDates','sleepTrend','saveSleep','deleteSleep'],true)) return dietSleepApi($db,$userId,$input);
     require_once __DIR__.'/weights.php';
     if (in_array($action,['weights','weightDates','weightTrend','saveWeight','deleteWeight'],true)) return dietWeightApi($db,$userId,$input);
     if ($action === 'dates') return array_column($db->all('SELECT DISTINCT `datePerformed` FROM `dietEntries` WHERE `userId` = ? ORDER BY `datePerformed`',[$userId]),'datePerformed');
