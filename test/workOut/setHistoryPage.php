@@ -12,7 +12,7 @@ function setHistoryPage($db, string $userId, array $input): array {
     $totalPages = max(1, (int)ceil($total / $pageSize));
     $page = min($page, $totalPages);
     $offset = ($page - 1) * $pageSize;
-    $items = $db->all("SELECT s.`id`, g.`datePerformed`, s.`weight`, s.`repetition`, s.`duration`, s.`calories`, s.`comments` $from ORDER BY g.`datePerformed` DESC, s.`createdAt` DESC, s.`id` DESC LIMIT $pageSize OFFSET $offset", $params);
+    $items = $db->all("SELECT s.`id`, s.`workOutGroupId`, g.`datePerformed`, s.`weight`, s.`repetition`, s.`duration`, s.`calories`, s.`comments` $from ORDER BY g.`datePerformed` DESC, s.`createdAt` DESC, s.`id` DESC LIMIT $pageSize OFFSET $offset", $params);
     foreach ($items as &$item) {
         $duration = max(0, (int)($item['duration'] ?? 0));
         $item['hours'] = (string)intdiv($duration, 3600);
