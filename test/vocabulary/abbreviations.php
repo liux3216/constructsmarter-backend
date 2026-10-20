@@ -3,7 +3,9 @@ function vocabularyAbbreviationSurface($value): string {
     if(!is_string($value))throw new InvalidArgumentException('Enter an abbreviation.');
     $value=trim(str_replace(['’','‘','‐','‑'],["'","'",'-','-'],$value));
     if(class_exists('Normalizer'))$value=Normalizer::normalize($value,Normalizer::FORM_C);
-    if($value===''||mb_strlen($value)>100||!preg_match("/^(?=.*\\p{L})[\\p{L}\\p{M}\\p{N}]+(?:[.'-][\\p{L}\\p{M}\\p{N}]+)*\\.?$/u",$value))throw new InvalidArgumentException('Use an abbreviation of up to 100 characters, with letters, numbers, dots, apostrophes or hyphens.');
+    $valid=$value!==''&&mb_strlen($value)<=100&&preg_match('/\\p{L}/u',$value);
+    if($valid)foreach(explode('-',$value) as $part)if(!preg_match("/^[\\p{L}\\p{M}\\p{N}]+(?:[.'][\\p{L}\\p{M}\\p{N}]+)*\\.?(?:'[sS])?$/u",$part)){$valid=false;break;}
+    if(!$valid)throw new InvalidArgumentException('Use an abbreviation of up to 100 characters, with letters, numbers, dots, apostrophes or hyphens.');
     return $value;
 }
 function vocabularyAbbreviationKey(string $surface, bool $caseSensitive=true): string {
@@ -11,6 +13,9 @@ function vocabularyAbbreviationKey(string $surface, bool $caseSensitive=true): s
     if(str_ends_with(mb_strtolower($surface),"'s"))$surface=substr($surface,0,-2);
     $surface=rtrim($surface,'.');
     return $caseSensitive?$surface:mb_strtolower($surface,'UTF-8');
+}
+function vocabularyAbbreviationParts(string $surface): array {
+    return array_values(array_unique([$surface,...explode('-',$surface)]));
 }
 function vocabularyPossibleAbbreviation(string $surface): bool {
     if(str_ends_with(mb_strtolower($surface),"'s"))$surface=substr($surface,0,-2);
@@ -70,7 +75,7 @@ function vocabularyFindAbbreviations($db,string $userId,$encoded,array $words,ar
         $surface=vocabularyAbbreviationSurface($value);$key=rtrim($surface,'.');
         // Prefer the dotted spelling if both forms occur, to flag Nov / Nov. once.
         if(!isset($groups[$key])||str_ends_with($surface,'.'))$groups[$key]=$surface;
-        $keys[vocabularyAbbreviationKey($surface)]=true;$keys[vocabularyAbbreviationKey($surface,false)]=true;
+        foreach(vocabularyAbbreviationParts($surface) as $part){$keys[vocabularyAbbreviationKey($part)]=true;$keys[vocabularyAbbreviationKey($part,false)]=true;}
     }
     $sensitive=[];$insensitive=[];
     foreach(array_chunk(array_keys($keys),500) as $chunk){
@@ -83,8 +88,10 @@ function vocabularyFindAbbreviations($db,string $userId,$encoded,array $words,ar
     foreach($groups as $groupKey=>$surface){
         $key=vocabularyAbbreviationKey($surface);
         $word=vocabularySurfaceWord($surface);
-        if($word!==null)foreach(vocabularyNameLookupWords($surface) as $nameKey)if(isset($names[$nameKey])){$matched[$groupKey]=true;continue 2;}
-        if(isset($sensitive[$key])||isset($insensitive[vocabularyAbbreviationKey($surface,false)])){$matched[$groupKey]=true;continue;}
+        foreach(vocabularyNameLookupWords($surface) as $nameKey)if(isset($names[$nameKey])){$matched[$groupKey]=true;continue 2;}
+        foreach(vocabularyAbbreviationParts($surface) as $part){
+            if(isset($sensitive[vocabularyAbbreviationKey($part)])||isset($insensitive[vocabularyAbbreviationKey($part,false)])){$matched[$groupKey]=true;continue 2;}
+        }
         if(vocabularyPossibleAbbreviation($surface)){
             // Uppercase undotted forms may be acronyms even if lowercase is known.
             $ambiguousCase=!str_contains($key,'.')&&mb_strtoupper($key,'UTF-8')===$key;

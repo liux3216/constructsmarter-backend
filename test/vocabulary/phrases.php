@@ -11,6 +11,13 @@ function vocabularyMatchPhrases($db,string $userId,$paragraph): array {
         foreach($parts as $part){if(!isset($node['next'][$part]))$node['next'][$part]=[];$node=&$node['next'][$part];}
         if(!isset($node['word']))$node['word']=$row['word'];
         unset($node);
+        // Saved word/blacklist phrases also recognize their fully joined spelling.
+        // Name List keeps its existing exact-case spacing/hyphen rules.
+        if(!$policy){
+            $joined=implode('',$parts);
+            if(!isset($tries[0]['next'][$joined]))$tries[0]['next'][$joined]=[];
+            if(!isset($tries[0]['next'][$joined]['word']))$tries[0]['next'][$joined]['word']=$row['word'];
+        }
     }
     if(!$tries[0]&&!$tries[1])return ['paragraph'=>$paragraph,'matches'=>[]];
     if(preg_match_all("/(?:\\p{L}\\.)+\\p{L}\\.?(?![\\p{L}\\p{M}\\p{N}])|[\\p{L}\\p{M}\\p{N}]+(?:['’‘][\\p{L}\\p{M}\\p{N}]+)*/u",$paragraph,$raw,PREG_OFFSET_CAPTURE)===false)throw new InvalidArgumentException('Use valid paragraph text.');

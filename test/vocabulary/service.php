@@ -45,6 +45,7 @@ function vocabularyNameLookupWords(string $word): array {
     if(!vocabularyIsAbbreviation($word)&&!preg_match("/\.'[sS]$/u",$word))$word=rtrim($word,'.');
     $keys=[];
     foreach([$word,...explode('-',$word)] as $part){
+        $part=vocabularyNameNormalize($part);
         $keys[$part]=true;
         if(preg_match("/'[sS]$/u",$part))$keys[vocabularyNameNormalize(substr($part,0,-2))]=true;
     }
@@ -110,18 +111,17 @@ function vocabularyLockName(string $userId): string {return 'vocab:'.substr(hash
 function vocabularyRequireExclusive($db, string $userId, string $destination, array $words): void {
     $labels=['vocabulary'=>'word list','vocabulary_blacklist'=>'blacklist','vocabulary_names'=>'name list'];
     foreach ($labels as $other=>$otherLabel) {
-        // A name can also be vocabulary (White / white); blacklist stays exclusive.
-        if ($other===$destination || ($destination==='vocabulary'&&$other==='vocabulary_names') || ($destination==='vocabulary_names'&&$other==='vocabulary')) continue;
+        // Names are independent; only Word List and Blacklist are mutually exclusive.
+        if ($other===$destination || $other==='vocabulary_names' || $destination==='vocabulary_names') continue;
         foreach (array_chunk($words,500) as $chunk) {
             $in=implode(',',array_fill(0,count($chunk),'?'));
-            $column=$other==='vocabulary_names'?'LOWER(word)':'word';
-            $conflict=$db->one("SELECT word FROM $other WHERE user_id=? AND $column IN ($in) LIMIT 1",[$userId,...array_map('vocabularyNormalize',$chunk)]);
+            $conflict=$db->one("SELECT word FROM $other WHERE user_id=? AND word IN ($in) LIMIT 1",[$userId,...array_map('vocabularyNormalize',$chunk)]);
             if ($conflict) throw new InvalidArgumentException('“'.$conflict['word'].'” is already in your '.$otherLabel.'. Remove it there before adding it to your '.$labels[$destination].'.');
         }
     }
 }
 function vocabularyApi($db, string $userId, array $input) {
-    if (!in_array($input['action']??'',['addWords','addBlacklist','saveWord','saveBlacklist','deleteWord','deleteBlacklist','addNames','saveName','deleteName','moveExclusion','saveAbbreviation','deleteAbbreviation'],true)) return vocabularyApiUnlocked($db,$userId,$input);
+    if (!in_array($input['action']??'',['addWords','addBlacklist','saveWord','saveBlacklist','deleteWord','deleteBlacklist','addNames','saveName','deleteName','moveExclusion','moveWordToBlacklist','saveAbbreviation','deleteAbbreviation'],true)) return vocabularyApiUnlocked($db,$userId,$input);
     // Serialize this user's writes across all three lists, including when the word is
     // absent from all lists. Acquire before opening the transaction to read fresh data.
     $lock=vocabularyLockName($userId);
@@ -133,6 +133,19 @@ function vocabularyApiUnlocked($db, string $userId, array $input) {
     $action=$input['action']??'';
     if($action==='matchPhrases')return vocabularyMatchPhrases($db,$userId,$input['paragraph']??null);
     if(in_array($action,['abbreviations','saveAbbreviation','deleteAbbreviation'],true))return vocabularyAbbreviationApi($db,$userId,$input);
+    if ($action==='moveWordToBlacklist') {
+        $id=vocabularyId($input['id']??null);
+        $db->begin();
+        try {
+            $entry=vocabularyOwned($db,'vocabulary',$userId,$id);
+            $db->exec('DELETE FROM vocabulary_meanings WHERE vocab_id=?',[$id]);
+            $db->exec('DELETE FROM vocabulary_lemmas WHERE vocab_id=?',[$id]);
+            $db->exec('DELETE FROM vocabulary WHERE id=? AND user_id=?',[$id,$userId]);
+            $db->exec('INSERT INTO vocabulary_blacklist (user_id,word) VALUES (?,?) ON DUPLICATE KEY UPDATE id=id',[$userId,$entry['word']]);
+            $db->commit();
+        } catch(Throwable $error) {$db->rollback();throw $error;}
+        return ['success'=>true,'word'=>$entry['word'],'destination'=>'blacklist'];
+    }
     if ($action==='moveExclusion') {
         $source=$input['source']??null;
         if (!is_string($source)||!in_array($source,['blacklist','namelist'],true)) throw new InvalidArgumentException('Choose blacklist or name list as the source.');
@@ -279,9 +292,15 @@ function vocabularyApiUnlocked($db, string $userId, array $input) {
         $id=empty($input['id'])?0:vocabularyId($input['id']);
         $table=['saveWord'=>'vocabulary','saveBlacklist'=>'vocabulary_blacklist','saveName'=>'vocabulary_names'][$action];
         $meanings=$action==='saveWord'?vocabularyMeanings($input['meanings']??'[]'):[];
+        $blacklistId=$action==='saveWord'&&isset($input['blacklist_id'])?vocabularyId($input['blacklist_id']):0;
+        if ($blacklistId && $id) throw new InvalidArgumentException('Create a new word when moving from Blacklist.');
         $roots=$action==='saveWord'&&array_key_exists('lemmas',$input)?vocabularyLemmaList($input['lemmas'],$word):null;
         $db->begin();
         try {
+            if ($blacklistId) {
+                vocabularyOwned($db,'vocabulary_blacklist',$userId,$blacklistId);
+                $db->exec('DELETE FROM vocabulary_blacklist WHERE id=? AND user_id=?',[$blacklistId,$userId]);
+            }
             if ($id) $owned=vocabularyOwned($db,$table,$userId,$id);
             vocabularyRequireExclusive($db,$userId,$table,[$word]);
             $duplicate=$db->one("SELECT id FROM $table WHERE user_id=? AND word=? AND id<>?",[$userId,$word,$id]);
