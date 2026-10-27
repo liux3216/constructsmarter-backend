@@ -65,11 +65,18 @@ function vocabularyWords($encoded): array {
     if (!is_array($values)||!array_is_list($values)||count($values)>5000) throw new InvalidArgumentException('Check up to 5000 unique words at a time.');
     return array_values(array_unique(array_map('vocabularyWord',$values)));
 }
-function vocabularyLemmaList($encoded, string $word): array {
+// Keep every compound prefix; accept only a complete, changed final noun form.
+function vocabularyWholeCompoundRoot(string $word,string $root): bool {
+    $split=strrpos($word,'-');
+    if($split===false||str_contains($word,' ')||str_contains($word,"'")||str_contains($root,' ')||str_contains($root,"'"))return false;
+    $prefix=substr($word,0,$split+1);
+    return str_starts_with($root,$prefix)&&preg_match('/^\\p{L}[\\p{L}\\p{M}]*$/u',substr($root,strlen($prefix)))&&$root!==$word;
+}
+function vocabularyLemmaList($encoded, string $word, bool $compoundLookup=false): array {
     $values=is_string($encoded)?json_decode($encoded,true):null;
     if (!is_array($values)||!array_is_list($values)||count($values)>4) throw new InvalidArgumentException('Use up to four lemmas per word.');
     $roots=array_values(array_diff(array_unique(array_map('vocabularyWord',$values)),[$word]));
-    return str_contains($word,'-')?[]:$roots;
+    return str_contains($word,'-')?($compoundLookup?array_values(array_filter($roots,fn($root)=>vocabularyWholeCompoundRoot($word,$root))):[]):$roots;
 }
 function vocabularyIsNumberCompound(string $word): bool {
     $split=strrpos($word,'-');if($split===false)return false;
@@ -88,7 +95,7 @@ function vocabularyCandidateLemmas($encoded, array $words): array {
         $lemmas[$word]=array_values(array_diff(array_unique(array_map('vocabularyWord',$roots)),[$word]));
         if(str_contains($word,'-')&&!vocabularyIsNumberCompound($word)) {
             $possessiveBase=str_ends_with($word,"'s")?vocabularyNormalize(substr($word,0,-2)):null;
-            $lemmas[$word]=array_values(array_filter($lemmas[$word],fn($root)=>$root===$possessiveBase));
+            $lemmas[$word]=array_values(array_filter($lemmas[$word],fn($root)=>$root===$possessiveBase||vocabularyWholeCompoundRoot($word,$root)));
         }
     }
     return $lemmas;
@@ -170,14 +177,14 @@ function vocabularyApiUnlocked($db, string $userId, array $input) {
         $query=vocabularyNormalize($query);
         $filter=$action==='namelist'?'user_id=? AND LOCATE(?,LOWER(word))>0':'user_id=? AND LOCATE(?,word)>0';$params=[$userId,$query];
         if ($action==='words' && $query!=='') {
-            $roots=array_key_exists('q_lemmas',$input)?vocabularyLemmaList($input['q_lemmas'],$query):[];
+            $roots=array_key_exists('q_lemmas',$input)?vocabularyLemmaList($input['q_lemmas'],$query,true):[];
             $keys=array_values(array_unique([$query,...$roots]));
             $in=implode(',',array_fill(0,count($keys),'?'));
             $filter="user_id=? AND (LOCATE(?,word)>0 OR word IN ($in) OR EXISTS (SELECT 1 FROM vocabulary_lemmas l WHERE l.vocab_id=vocabulary.id AND LOCATE('-',vocabulary.word)=0 AND l.lemma IN ($in)))";
             $params=[$userId,$query,...$keys,...$keys];
         }
         if ($action==='blacklist' && $query!=='') {
-            $roots=array_key_exists('q_lemmas',$input)?vocabularyLemmaList($input['q_lemmas'],$query):[];
+            $roots=array_key_exists('q_lemmas',$input)?vocabularyLemmaList($input['q_lemmas'],$query,true):[];
             $keys=array_values(array_unique([$query,...$roots]));
             $in=implode(',',array_fill(0,count($keys),'?'));
             $filter="user_id=? AND (LOCATE(?,word)>0 OR word IN ($in))";
