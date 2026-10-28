@@ -86,18 +86,24 @@ if($action === "Search In All"){
 }else if($action === "Delete"){
     $db->exec("DELETE FROM `$table` WHERE `$existingPrimaryKey` = \"$primaryKeyValueSQL\";", [], __FILE__, __LINE__); /* no SQL Injection Control */
 }else if($action === "SQL"){
-    $conn = new mysqli(
-        $sqlInfo["hostname"], 
-        $sqlInfo["username"], 
-        $sqlInfo["password"], 
-        $sqlInfo["database"]
-    );
-    if($conn->connect_error){
+    try {
+        $conn = new mysqli(
+            $sqlInfo["hostname"],
+            $sqlInfo["username"],
+            $sqlInfo["password"],
+            $sqlInfo["database"]
+        );
+        if($conn->connect_error){
+            http_response_code(500);
+            error_log(basename(__FILE__)." ".__LINE__." ".$email." ".$conn->connect_error);
+            exit(json_encode(["msg" => "Connection failed: ".$conn->connect_error]));
+        }
+        $results = $conn->query($sql); /* privileged custom SQL tool */
+    } catch (mysqli_sql_exception $error) {
+        // PHP 8.1+ throws by default instead of returning false for SQL errors.
         http_response_code(500);
-        error_log(basename(__FILE__)." ".__LINE__." ".$email." ".$conn->connect_error);
-        exit(json_encode(["msg" => "Connection failed: ".$conn->connect_error]));
+        exit(json_encode(["msg" => "Database Error: ".$error->getMessage()], JSON_INVALID_UTF8_SUBSTITUTE));
     }
-    $results = $conn->query($sql); /* no SQL Injection Control */
     if($results === false){
         http_response_code(500);
         exit(json_encode(["msg" => "Database Error: ".$conn->error]));

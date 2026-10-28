@@ -1,0 +1,3 @@
+Options -Indexes
+RewriteEngine On
+RewriteRule ^(.*)$ /livesmarter/$1 [L]

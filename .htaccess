@@ -1,0 +1,7 @@
+Options -Indexes
+# Block source-control metadata and environment files.
+RewriteEngine On
+RewriteRule (^|/)\.(git|svn|hg)(/|$) - [F,L,NC]
+<FilesMatch "^\.env(\..*)?$">
+  Require all denied
+</FilesMatch>

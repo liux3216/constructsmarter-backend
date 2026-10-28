@@ -23,7 +23,7 @@ $equalFields = [
     "projects", "assignments", "purchases", "PerDiem", "reports", "forms",
     "personel", "fleets", "calendar", "timeOffs", "office", "allOffice",
     "outside", "outsideStatus", "metrics", "newspaper", "community",
-    "trainings", "workOut", "assignmentNotification", "dispatch",
+    "trainings", "assignmentNotification", "dispatch",
 ];
 $betweenDateFields = ["birthDay", "hireDate", "quitDate"];
 if (!array_key_exists("void", $_POST)) $search->equals("void", "no");

@@ -1,4 +1,5 @@
-<?php 
+<?php
+ 
 //required headers
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Max-Age: 3600");
